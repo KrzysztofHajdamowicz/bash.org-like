@@ -1,0 +1,18 @@
+{% extends 'quotes/base.html' %}
+{% load mathfilters %}
+
+{% block content %}
+
+		{% for quote in quotes %}
+			<div class="quote">
+				<h1><a href="{% url 'quote_view' quote_id=quote.pk %}">#{{ quote.id }}</a></h1>
+				<p class="quote-votes">
+					<a href="{% url 'quote_vote_down' quote_id=quote.pk %}">-</a>
+					    ({{ quote.votes_up|sub:quote.votes_down }})    
+					<a href="{% url 'quote_vote_up' quote_id=quote.pk %}">+</a>
+				</p>
+				<p class="content"><pre>{{ quote.content|linebreaksbr }}</pre></p>
+				<p class="accepted-by">{{ quote.acceptant }} </p>
+			</div>
+		{% endfor %}
+{% endblock content %}

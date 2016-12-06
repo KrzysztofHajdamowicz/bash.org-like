@@ -1,0 +1,15 @@
+{% extends 'quotes/base.html' %}
+{% load mathfilters %}
+
+{% block content %}
+			<div class="quote">
+				<h1><a href="{% url 'quote_view' quote_id=quote.pk %}">#{{ quote.id }}</a></h1>
+				<p class="quote-votes">
+					<a href="/vote_down/{{ quote.id }}">-</a>
+					    ({{ quote.votes_up|sub:quote.votes_down }})    
+					<a href="/vote_up/{{ quote.id }}">+</a>
+				</p>
+				<p class="content"><pre>{{ quote.content|linebreaksbr }}</pre></p>
+				<p class="accepted-by">{{ quote.acceptant }} </p>
+			</div>
+{% endblock content %}

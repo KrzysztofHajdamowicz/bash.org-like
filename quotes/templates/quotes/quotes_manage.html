@@ -1,0 +1,18 @@
+{% extends 'quotes/base.html' %}
+{% load mathfilters %}
+
+{% block content %}
+
+		{% for quote in quotes %}
+			<div class="quote">
+				<h1><a href="{% url 'quote_view' quote_id=quote.pk %}">#{{ quote.id }}</a></h1>
+				<p class="quote-votes">
+					<a href="{% url 'quote_accept' quote_id=quote.pk %}">Zaakceptuj</a> ||
+					<a href="{% url 'quote_reject' quote_id=quote.pk %}">Odrzuć</a> || 
+					<a href="{% url 'quote_delete' quote_id=quote.pk %}">Usuń</a>
+				</p>
+				<p class="content"><pre>{{ quote.content|linebreaksbr }}</pre></p>
+				<p class="accepted-by">{{ quote.acceptant }} </p>
+			</div>
+		{% endfor %}
+{% endblock content %}

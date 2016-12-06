@@ -1,0 +1,19 @@
+<html>
+	<head>
+		<title>{{ site_name }}</title>
+		<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+		<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+		<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+	</head>
+	<body style="padding-left: 15px; padding-top: 15px;">
+	<h1>{{ site_name }} :: {{ section }}</h1>
+	<div class="menu">
+		<a href="{% url 'accepted_list' %}">Przeglądaj</a>
+		<a href="{% url 'trash_list' %}">Odrzuty</a>
+		<a href="{% url 'quote_add' %}">Dodaj</a>
+		<a href="{% url 'login_user' %}">Admin</a>
+	</div>
+	{% block content %}
+	{% endblock %}
+	</body>
+</html>
