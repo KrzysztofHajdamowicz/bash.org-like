@@ -33,11 +33,11 @@ def index_view(request):
     return render(request, 'quotes/welcome.html', {})
 
 def accepted_list(request):
-    quotes = Quote.objects.all().filter(status=3).order_by('-created_date')[:10]
+    quotes = Quote.objects.all().filter(status=3).order_by('-id')[:10]
     return render(request, 'quotes/quotes_list.html', {'quotes': quotes, 'site_name': settings.SITE_NAME, 'section': 'Najnowsze'})
 
 def trash_list(request):
-    quotes = Quote.objects.all().filter(status=2).order_by('-created_date')[:10]
+    quotes = Quote.objects.all().filter(status=2).order_by('-id')[:10]
     return render(request, 'quotes/quotes_list.html', {'quotes': quotes, 'site_name': settings.SITE_NAME, 'section': 'Odrzucone'})
 
 def quote_view(request, quote_id):
@@ -57,7 +57,7 @@ def quote_add(request):
 
 @login_required(login_url='/login/')
 def quote_manage(request):
-    quotes = Quote.objects.all().filter(status=1).order_by('-created_date')[:10]
+    quotes = Quote.objects.all().filter(status=1).order_by('-id')[:10]
     return render(request, 'quotes/quotes_manage.html', {'quotes': quotes, 'site_name': settings.SITE_NAME, 'section': 'Panel admina'}) 
 
 @login_required(login_url='/login/')
