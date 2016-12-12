@@ -30,7 +30,7 @@ def login_user(request):
     return render(request, 'quotes/login_form.html', {'site_name': settings.SITE_NAME, 'section': 'Logowanie'})
 
 def index_view(request):
-    return render(request, 'quotes/welcome.html', {})
+    return render(request, 'quotes/welcome.html', {'site_name': settings.SITE_NAME, 'section': 'Strona Główna'})
 
 def accepted_list(request):
     quotes = Quote.objects.all().filter(status=3).order_by('-id')[:10]
