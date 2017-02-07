@@ -1,14 +1,42 @@
 {% extends 'quotes/base.html' %}
 {% load mathfilters %}
 
+{% block head %}
+<script type="text/javascript">
+function vote_up(quote_id){
+    var url = "{% url 'quote_ajax' %}";
+    $.ajax({
+        url: url,
+        type: "GET",
+        dataType: "json",
+        data: {"quote_id": quote_id},
+        success: function(data){
+            $("#current_votes_" + quote_id).html(data["current_votes"]);
+        }
+    });
+}
+
+$(document).ready(function(){
+    $(".vote_up").click(function(event){
+        event.preventDefault();
+        vote_up($(this).attr("id").replace("vote_up_",""));
+        return false;
+    });
+});
+</script>
+{% endblock %}
+
 {% block content %}
   {% include 'quotes/paginator.html' %}
     {% for quote in quotes %}
       <div class="quote">
-        <h3><a href="{% url 'quote_view' quote_id=quote.pk %}">#{{ quote.id }}</a></h1>
-        <p class="quote-votes">Karma: {{ quote.votes_up|sub:quote.votes_down }} ||
+        <h3><a href="{% url 'quote_view' quote_id=quote.pk %}">#{{ quote.id }}</a></h3>
+        <p class="quote-votes">Karma: <span id="current_votes_{{ quote.id }}">{{ quote.votes_up|sub:quote.votes_down }}</span> ||
                 <a href="{% url 'quote_vote_down' quote_id=quote.pk %}"><span class="glyphicon glyphicon-thumbs-down" aria-hidden="true"></span></a>&nbsp;&nbsp;&nbsp;
+                <a href="#" id="vote_up_{{ quote.pk }}" class="vote_up"><span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"></span></a>
+                {% comment %}
                 <a href="{% url 'quote_vote_up' quote_id=quote.pk %}"><span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"></span></a>
+                {% endcomment %}
         </p>
         <pre>{{ quote.content|linebreaksbr }}</pre>
         <p class="muted"><small><em>Zaakceptował: {{ quote.acceptant }}</em></small></p>

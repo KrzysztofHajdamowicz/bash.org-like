@@ -1,4 +1,5 @@
 # -*- coding: UTF-8 -*-
+import json
 from django.http import *
 from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
@@ -120,3 +121,15 @@ def quote_vote_down(request, quote_id):
     quote.votes_down += 1
     quote.save()
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+
+
+def quote_ajax(request):
+    if not request.is_ajax():
+        pass # You can handle with it
+    quote = Quote.objects.get(pk=request.GET['quote_id'])
+    quote.votes_up += 1
+    quote.save()
+    return HttpResponse(
+        json.dumps({"current_votes": quote.votes_up - quote.votes_down}),
+        content_type="application/json"
+    )
