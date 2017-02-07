@@ -10,7 +10,6 @@ from django.conf import settings
 from django.utils import timezone
 from .models import Quote
 from .forms import AddQuoteForm
-import pdb
 
 
 # Create your views here.
