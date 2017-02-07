@@ -5,7 +5,7 @@
   {% include 'quotes/paginator.html' %}
     {% for quote in quotes %}
       <div class="quote">
-        <h1><a href="{% url 'quote_view' quote_id=quote.pk %}">#{{ quote.id }}</a></h1>
+        <h3><a href="{% url 'quote_view' quote_id=quote.pk %}">#{{ quote.id }}</a></h1>
         <p class="quote-votes">Karma: {{ quote.votes_up|sub:quote.votes_down }} ||
                 <a href="{% url 'quote_vote_down' quote_id=quote.pk %}"><span class="glyphicon glyphicon-thumbs-down" aria-hidden="true"></span></a>&nbsp;&nbsp;&nbsp;
                 <a href="{% url 'quote_vote_up' quote_id=quote.pk %}"><span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"></span></a>
