@@ -10,7 +10,7 @@ git clone https://github.com/KrzysztofHajdamowicz/bash.org-like.git
 cd bash.org-like
 virtualenv venv
 source venv/bin/activate
-pip install $(cat requirements.txt )
+pip install -r requirements.txt
 python manage.py migrate
 python manage.py runserver
 ```
