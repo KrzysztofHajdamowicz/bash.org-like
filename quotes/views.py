@@ -39,7 +39,6 @@ def index_view(request):
 
 def accepted_list(request):
     quotes = Quote.objects.all().filter(status=3).order_by('-id')
-    quotes = Quote.objects.all().filter(status=3).order_by('-id')
 
     # https://docs.djangoproject.com/pl/1.10/topics/pagination/
     paginator = Paginator(quotes, 10)
