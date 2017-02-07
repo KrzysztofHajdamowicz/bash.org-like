@@ -7,9 +7,9 @@
       <div class="quote">
         <h1><a href="{% url 'quote_view' quote_id=quote.pk %}">#{{ quote.id }}</a></h1>
         <p class="quote-votes">
-        	<a href="{% url 'quote_vote_down' quote_id=quote.pk %}"><i class="icon-thumbs-down"></i></a>
+        	<a href="{% url 'quote_vote_down' quote_id=quote.pk %}"><span class="glyphicon glyphicon-thumbs-down" aria-hidden="true"></span></a>
         	    ({{ quote.votes_up|sub:quote.votes_down }})
-        	<a href="{% url 'quote_vote_up' quote_id=quote.pk %}"><i class="icon-thumbs-up"></i></a>
+        	<a href="{% url 'quote_vote_up' quote_id=quote.pk %}"><span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"></span></a>
         </p>
         <pre>{{ quote.content|linebreaksbr }}</pre>
         <p class="muted"><small><em>Zaakceptował: {{ quote.acceptant }}</em></small></p>
