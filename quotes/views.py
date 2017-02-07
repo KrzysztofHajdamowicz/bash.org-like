@@ -3,13 +3,16 @@ from django.http import *
 from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
-from django.shortcuts import render, get_object_or_404, render_to_response,redirect
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.shortcuts import render, get_object_or_404, render_to_response, redirect
 from django.conf import settings
 from django.utils import timezone
 from .models import Quote
 from .forms import AddQuoteForm
 
+
 # Create your views here.
+
 
 def login_user(request):
     if request.user.is_authenticated():
@@ -33,8 +36,23 @@ def index_view(request):
     return render(request, 'quotes/welcome.html', {'site_name': settings.SITE_NAME, 'section': 'Strona Główna'})
 
 def accepted_list(request):
-    quotes = Quote.objects.all().filter(status=3).order_by('-id')[:10]
-    return render(request, 'quotes/quotes_list.html', {'quotes': quotes, 'site_name': settings.SITE_NAME, 'section': 'Najnowsze'})
+    quotes = Quote.objects.all().filter(status=3).order_by('-id')
+    quotes = Quote.objects.all().filter(status=3).order_by('-id')
+
+    # https://docs.djangoproject.com/pl/1.10/topics/pagination/
+    paginator = Paginator(quotes, 10)
+    page = request.GET.get('page')
+    try:
+        quotes = paginator.page(page)
+    except PageNotAnInteger:
+        quotes = paginator.page(1)
+    except EmptyPage:
+        quotes = paginator.page(paginator.num_pages)
+
+    return render(request,
+                  'quotes/quotes_list.html',
+                  {'quotes': quotes, 'site_name': settings.SITE_NAME, 'section': 'Najnowsze'})
+
 
 def trash_list(request):
     quotes = Quote.objects.all().filter(status=2).order_by('-id')[:10]

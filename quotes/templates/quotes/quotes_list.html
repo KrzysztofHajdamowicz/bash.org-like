@@ -2,8 +2,8 @@
 {% load mathfilters %}
 
 {% block content %}
-
-		{% for quote in quotes %}
+    {% include 'quotes/paginator.html' %}
+   		{% for quote in quotes %}
 			<div class="quote">
 				<h1><a href="{% url 'quote_view' quote_id=quote.pk %}">#{{ quote.id }}</a></h1>
 				<p class="quote-votes">
@@ -15,4 +15,5 @@
 				<p class="accepted-by">{{ quote.acceptant }} </p>
 			</div>
 		{% endfor %}
+    {% include 'quotes/paginator.html' %}
 {% endblock content %}
