@@ -14,4 +14,5 @@ urlpatterns = [
     url(r'^quote/vote_up/(?P<quote_id>[0-9]+)/$', views.quote_vote_up, name='quote_vote_up'),
     url(r'^quote/vote_down/(?P<quote_id>[0-9]+)/$', views.quote_vote_down, name='quote_vote_down'),
     url(r'^quote/add$', views.quote_add, name='quote_add'),
+    url(r'^quote/ajax$', views.quote_ajax, name='quote_ajax'),
 ]
