@@ -31,11 +31,11 @@ def login_user(request):
                     login(request, user)
                     return HttpResponseRedirect('/manage/')
     print(settings.SITE_NAME)
-    return render(request, 'quotes/login_form.html', {'site_name': settings.SITE_NAME, 'section': 'Logowanie'})
+    return render(request, 'quotes/login_form.html', {'site_name': settings.SITE_NAME, 'context': 'login_user'})
 
 
 def index_view(request):
-    return render(request, 'quotes/welcome.html', {'site_name': settings.SITE_NAME, 'section': 'Strona Główna'})
+    return render(request, 'quotes/welcome.html', {'site_name': settings.SITE_NAME, 'context': 'index_view'})
 
 
 def accepted_list(request):
@@ -53,17 +53,17 @@ def accepted_list(request):
 
     return render(request,
                   'quotes/quotes_list.html',
-                  {'quotes': quotes, 'site_name': settings.SITE_NAME, 'section': 'Najnowsze'})
+                  {'quotes': quotes, 'site_name': settings.SITE_NAME, 'context': 'accepted_list'})
 
 
 def trash_list(request):
     quotes = Quote.objects.all().filter(status=2).order_by('-id')[:10]
-    return render(request, 'quotes/quotes_list.html', {'quotes': quotes, 'site_name': settings.SITE_NAME, 'section': 'Odrzucone'})
+    return render(request, 'quotes/quotes_list.html', {'quotes': quotes, 'site_name': settings.SITE_NAME, 'context': 'trash_list'})
 
 
 def quote_view(request, quote_id):
     quote = get_object_or_404(Quote, pk=quote_id)
-    return render(request, 'quotes/quotes_view.html', {'quote': quote, 'site_name': settings.SITE_NAME, 'section': 'Podgląd cytatu'})
+    return render(request, 'quotes/quotes_view.html', {'quote': quote, 'site_name': settings.SITE_NAME, 'context': 'accepted_list'})
 
 
 def quote_add(request):
@@ -72,16 +72,16 @@ def quote_add(request):
         if form.is_valid():
             quote = form.save(commit=False)
             quote.save()
-            return render(request, 'quotes/quote_added.html', {'site_name': settings.SITE_NAME, 'section': 'Dodano do kolejki'})
+            return render(request, 'quotes/quote_added.html', {'site_name': settings.SITE_NAME, 'context': 'quote_add'})
     else:
         form = AddQuoteForm()
-        return render(request, 'quotes/quote_add.html', {'form': form, 'site_name': settings.SITE_NAME, 'section': 'Dodaj cytat'})
+        return render(request, 'quotes/quote_add.html', {'form': form, 'site_name': settings.SITE_NAME, 'context': 'quote_add'})
 
 
 @login_required(login_url='/login/')
 def quote_manage(request):
     quotes = Quote.objects.all().filter(status=1).order_by('-id')[:10]
-    return render(request, 'quotes/quotes_manage.html', {'quotes': quotes, 'site_name': settings.SITE_NAME, 'section': 'Panel admina'})
+    return render(request, 'quotes/quotes_manage.html', {'quotes': quotes, 'site_name': settings.SITE_NAME, 'context': 'quote_manage'})
 
 
 @login_required(login_url='/login/')
@@ -125,7 +125,7 @@ def quote_vote_down(request, quote_id):
 
 def quote_ajax(request):
     if not request.is_ajax():
-        pass # You can handle with it
+        pass  # You can handle with it
     quote = Quote.objects.get(pk=request.GET['quote_id'])
     quote.votes_up += 1
     quote.save()
