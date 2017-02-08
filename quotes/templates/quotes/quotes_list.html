@@ -47,7 +47,7 @@ $(document).ready(function(){
       </div>
       <div class="panel-body">
         <pre>{{ quote.content|linebreaksbr }}</pre>
-        <p class="muted"><small><em>Zaakceptował: {{ quote.acceptant }}</em></small></p>
+        <p class="muted" style="margin-bottom: 50px;"><small><em>Date added: {{ quote.created_date }}</em></small></p>
       </div>
     {% endfor %}
   {% include 'quotes/paginator.html' %}
