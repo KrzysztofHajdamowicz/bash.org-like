@@ -49,7 +49,12 @@
             </li>
             <li {% if context == 'accepted_list' %} class="active" {% endif %}>
               <a href="{% url 'accepted_list' %}">
-                <span class="glyphicon glyphicon-heart" aria-hidden="true"></span>&nbsp;Accepted
+                <span class="glyphicon glyphicon-book" aria-hidden="true"></span>&nbsp;Accepted
+              </a>
+            </li>
+            <li {% if context == 'best_list' %} class="active" {% endif %}>
+              <a href="{% url 'best_list' %}">
+                <span class="glyphicon glyphicon-heart" aria-hidden="true"></span>&nbsp;Best
               </a>
             </li>
             <li {% if context == 'trash_list' %} class="active" {% endif %}>

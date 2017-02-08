@@ -56,6 +56,24 @@ def accepted_list(request):
                   {'quotes': quotes, 'site_name': settings.SITE_NAME, 'context': 'accepted_list'})
 
 
+def best_list(request):
+    quotes = Quote.objects.all().filter(status=3).extra(select={'karma': 'votes_up - votes_down'}).order_by('-karma', '-id')
+
+    # https://docs.djangoproject.com/pl/1.10/topics/pagination/
+    paginator = Paginator(quotes, 10)
+    page = request.GET.get('page')
+    try:
+        quotes = paginator.page(page)
+    except PageNotAnInteger:
+        quotes = paginator.page(1)
+    except EmptyPage:
+        quotes = paginator.page(paginator.num_pages)
+
+    return render(request,
+                  'quotes/quotes_list.html',
+                  {'quotes': quotes, 'site_name': settings.SITE_NAME, 'context': 'best_list'})
+
+
 def trash_list(request):
     quotes = Quote.objects.all().filter(status=2).order_by('-id')[:10]
     return render(request, 'quotes/quotes_list.html', {'quotes': quotes, 'site_name': settings.SITE_NAME, 'context': 'trash_list'})

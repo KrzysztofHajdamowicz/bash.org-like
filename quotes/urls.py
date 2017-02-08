@@ -6,6 +6,7 @@ urlpatterns = [
     url(r'^login/$', views.login_user, name='login_user'),
     url(r'^manage/$', views.quote_manage, name='quote_manage'),
     url(r'^quote/show$', views.accepted_list, name='accepted_list'),
+    url(r'^quote/best$', views.best_list, name='best_list'),
     url(r'^trash/show$', views.trash_list, name='trash_list'),
     url(r'^quote/(?P<quote_id>[0-9]+)/$', views.quote_view, name='quote_view'),
     url(r'^quote/accept/(?P<quote_id>[0-9]+)/$', views.quote_accept, name='quote_accept'),
