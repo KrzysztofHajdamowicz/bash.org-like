@@ -1,5 +1,20 @@
 {% extends "quotes/base.html" %}
 {% block content %}
+
+      <form class="form-signin" name="LoginForm" action="/login/" method="post">
+        {% csrf_token %}
+        {% if next %}
+            <input type="hidden" name="next" value="{{ next }}" />
+        {% endif %}
+        <h2 class="form-signin-heading">Please sign in</h2>
+        <label for="username" class="sr-only">Username</label>
+        <input type="text" id="username" name="username" class="form-control" placeholder="Username" required autofocus>
+        <label for="password" class="sr-only">Password</label>
+        <input type="password" id="password" name="password" class="form-control" placeholder="Password" required>
+        <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+      </form>
+
+{% comment %}
     <div id="login">
         <form class="form-horizontal" name="LoginForm" action="/login/" method="post">
         {% csrf_token %}
@@ -25,4 +40,5 @@
         </div>
         </form>
     </div>
+    {% endcomment %}
 {% endblock %}
