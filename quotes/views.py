@@ -1,14 +1,13 @@
-# -*- coding: UTF-8 -*-
-import json
-from django.http import HttpResponse, HttpResponseRedirect
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
+from django.db.models import F
+from django.http import HttpResponseRedirect, JsonResponse
+from django.shortcuts import get_object_or_404, render
 from django.conf import settings
-from django.utils import timezone
-from .models import Quote
+
 from .forms import AddQuoteForm
+from .models import Quote
 
 
 # Create your views here.
@@ -38,7 +37,7 @@ def index_view(request):
 
 
 def accepted_list(request):
-    quotes = Quote.objects.all().filter(status=3).order_by('-id')
+    quotes = Quote.objects.filter(status=3).order_by('-id')
 
     # https://docs.djangoproject.com/pl/1.10/topics/pagination/
     paginator = Paginator(quotes, 10)
@@ -56,7 +55,7 @@ def accepted_list(request):
 
 
 def best_list(request):
-    quotes = Quote.objects.all().filter(status=3).extra(select={'karma': 'votes_up - votes_down'}).order_by('-karma', '-id')
+    quotes = Quote.objects.filter(status=3).annotate(karma=F('votes_up') - F('votes_down')).order_by('-karma', '-id')
 
     # https://docs.djangoproject.com/pl/1.10/topics/pagination/
     paginator = Paginator(quotes, 10)
@@ -74,7 +73,7 @@ def best_list(request):
 
 
 def trash_list(request):
-    quotes = Quote.objects.all().filter(status=2).order_by('-id')[:10]
+    quotes = Quote.objects.filter(status=2).order_by('-id')[:10]
     return render(request, 'quotes/quotes_list.html', {'quotes': quotes, 'site_name': settings.SITE_NAME, 'context': 'trash_list'})
 
 
@@ -97,7 +96,7 @@ def quote_add(request):
 
 @login_required(login_url='/login/')
 def quote_manage(request):
-    quotes = Quote.objects.all().filter(status=1).order_by('-id')[:10]
+    quotes = Quote.objects.filter(status=1).order_by('-id')[:10]
     return render(request, 'quotes/quotes_manage.html', {'quotes': quotes, 'site_name': settings.SITE_NAME, 'context': 'quote_manage'})
 
 
@@ -146,7 +145,4 @@ def quote_ajax(request):
     quote = Quote.objects.get(pk=request.GET['quote_id'])
     quote.votes_up += 1
     quote.save()
-    return HttpResponse(
-        json.dumps({"current_votes": quote.votes_up - quote.votes_down}),
-        content_type="application/json"
-    )
+    return JsonResponse({"current_votes": quote.votes_up - quote.votes_down})

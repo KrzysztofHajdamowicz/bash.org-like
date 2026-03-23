@@ -1,7 +1,6 @@
-Django==4.2.29
-django-mathfilters==0.4.0
-gunicorn
-whitenoise
-dj-database-url
-psycopg2-binary
-mysqlclient
+Django==6.0.3
+gunicorn==23.0.0
+whitenoise==6.9.0
+dj-database-url==2.3.0
+psycopg[binary]==3.3.3
+mysqlclient==2.2.7

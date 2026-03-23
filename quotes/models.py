@@ -16,5 +16,8 @@ class Quote(models.Model):
     votes_down = models.PositiveIntegerField(default=0)
     status = models.PositiveIntegerField(default=1, choices=STATUS_CHOICES)
 
+    class Meta:
+        ordering = ['-created_date']
+
     def __str__(self):
         return self.content
