@@ -2,7 +2,7 @@
   "name": "bash.org-like",
   "image": "mcr.microsoft.com/devcontainers/python:3.12",
   "forwardPorts": [8000],
-  "postCreateCommand": "pip install -r requirements.txt && python manage.py migrate",
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
   "containerEnv": {
     "SECRET_KEY": "dev-secret-key-not-for-production",
     "DEBUG": "True"
