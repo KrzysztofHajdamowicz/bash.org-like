@@ -1,13 +1,13 @@
 {% extends 'quotes/base.html' %}
 
 {% block content %}
-<form class="form-horizontal" method="post">
+<form method="post">
   <fieldset style="margin-top: 50px;">
     <legend>Add a new quote</legend>
     {% csrf_token %}
-    <label class="control-label" for="textarea">Quote content</label>
-    <textarea style="margin-bottom: 20px;" class="form-control" id="id_content" name="content"  placeholder="Quote content" required autofocus></textarea>
-    <button class="btn btn-lg btn-primary btn-block" type="submit">Add a quote!</button>
+    <label class="form-label" for="id_content">Quote content</label>
+    <textarea style="margin-bottom: 20px;" class="form-control" id="id_content" name="content" placeholder="Quote content" required autofocus></textarea>
+    <button class="btn btn-lg btn-primary w-100" type="submit">Add a quote!</button>
   </fieldset>
 </form>
 {% endblock content %}

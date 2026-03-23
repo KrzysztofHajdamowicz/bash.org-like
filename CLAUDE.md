@@ -8,7 +8,7 @@ A **bash.org-like quote database** built with Django. Users submit IRC/chat-styl
 - Single Django app: `quotes`
 - Function-based views (no CBVs)
 - SQLite by default, PostgreSQL and MariaDB via `DATABASE_URL`
-- Bootstrap 3.3.7 frontend with jQuery for AJAX voting
+- Bootstrap 5.3 frontend with vanilla JS for AJAX voting
 
 ## Quick commands
 
@@ -48,10 +48,10 @@ quotes/                  # The single Django app
   templatetags/
     quote_extras.py      # Custom `sub` filter (karma = votes_up - votes_down)
   templates/quotes/
-    base.html            # Bootstrap 3 layout, navbar, static assets
+    base.html            # Bootstrap 5 layout, navbar, static assets
     welcome.html         # Home page
     quotes_list.html     # Paginated quote list (accepted + best + trash views share this)
-    quotes_view.html     # Single quote detail
+    quotes_view.html     # Single quote detail with vote forms
     quote_add.html       # Submit new quote form
     quote_added.html     # Success page after submission
     quotes_manage.html   # Moderation panel (login required)
@@ -65,22 +65,22 @@ icons/                   # Favicons and PWA manifest (served as static files)
 
 ### The Quote model
 
-The only model. Status is an integer field, not an enum:
+The only model. Status uses class-level constants:
 
-| Value | Meaning    |
-|-------|------------|
-| 1     | Pending    |
-| 2     | Rejected   |
-| 3     | Approved   |
+| Constant               | Value | Meaning  |
+|------------------------|-------|----------|
+| `Quote.STATUS_PENDING` | 1     | Pending  |
+| `Quote.STATUS_REJECTED`| 2     | Rejected |
+| `Quote.STATUS_APPROVED`| 3     | Approved |
 
-These magic numbers are used directly in view queries (`status=3`, `status=1`, etc.) rather than through named constants. `STATUS_CHOICES` is defined at module level in `models.py` but the views hardcode the integers.
+Always use these constants (e.g. `Quote.STATUS_APPROVED`) rather than bare integers when querying or setting status.
 
 Key fields:
 - `content` — the quote text (TextField)
 - `votes_up` / `votes_down` — separate counters (PositiveIntegerField), not a net score
 - `acceptant` — ForeignKey to User (SET_NULL), the moderator who approved/rejected
 - `created_date` — auto_now_add, used for default ordering
-- `status` — integer with choices, defaults to 1 (pending)
+- `status` — integer with choices, defaults to `STATUS_PENDING`
 
 `DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'` — the pk is a BigAutoField.
 
@@ -92,11 +92,18 @@ Every `render()` call passes `site_name` and `context` (a string identifying the
 
 Auth-protected views use `@login_required(login_url='/login/')`. There is no LoginRequiredMiddleware — most pages are public.
 
-State-changing operations (accept, reject, delete, vote) use **GET requests** and redirect back via `HTTP_REFERER`. This is a known design choice, not a bug.
+**State-changing operations** (accept, reject, delete, vote) use `@require_POST` and POST forms with CSRF tokens. Templates use `<form method="post">` with `{% csrf_token %}` for these actions. The AJAX vote-up in `quotes_list.html` uses vanilla `fetch()` with the CSRF token read from a form on the page.
 
 ### Template filter
 
 `{% load quote_extras %}` provides a `sub` filter for karma display: `{{ quote.votes_up|sub:quote.votes_down }}`. This replaced the third-party `django-mathfilters` package.
+
+### Frontend stack
+
+- **Bootstrap 5.3** via CDN (no jQuery dependency)
+- **Bootstrap Icons** via CDN (replaced Glyphicons)
+- **Vanilla JavaScript** for AJAX voting (replaced jQuery)
+- No IE polyfills — modern browsers only
 
 ### Database configuration
 
@@ -110,31 +117,17 @@ WhiteNoise serves static files. `STATIC_ROOT = BASE_DIR / 'staticfiles'`. The `i
 
 ## Gotchas and things to watch out for
 
-1. **Status integers are hardcoded everywhere.** The views use `status=3`, `status=2`, `status=1` directly. If you add or change statuses, grep the entire codebase — views, templates, and tests all assume these values.
+1. **`login_user` view calls `logout()` on every non-authenticated request** before checking credentials. This is intentional but unusual.
 
-2. **`quote_add` view has a subtle bug.** On POST with invalid form data, it returns `None` (falls through without returning a response). Only valid POST and GET are handled with explicit returns.
+2. **Voting is not idempotent.** Each request increments the counter. No session/IP tracking prevents repeated votes.
 
-3. **State-changing actions accept GET requests.** Vote, accept, reject, and delete all work via GET. This means crawlers or prefetch could trigger actions. The moderation actions are behind `@login_required` but voting endpoints are fully public and unprotected.
+3. **The `context` template variable name shadows Django terminology.** It's just a string for navbar highlighting, not a template context dict.
 
-4. **`login_user` view calls `logout()` on every non-authenticated request** before checking credentials. This is intentional but unusual.
+4. **`best_list` uses `annotate(karma=F('votes_up') - F('votes_down'))`** to compute karma in the database. The `karma` attribute is available on queryset results but is not a model field.
 
-5. **`login_user` has a `print(settings.SITE_NAME)` debug statement** that runs on every request to the login page.
+5. **The `SECRET_KEY` has a hardcoded fallback in settings.** This is fine for local dev but must be overridden via environment variable in production.
 
-6. **AJAX vote endpoint (`quote_ajax`) has no error handling.** If `quote_id` is missing from GET params or doesn't match a quote, it raises an unhandled exception (KeyError or Quote.DoesNotExist).
-
-7. **Voting is not idempotent.** Each request increments the counter. No session/IP tracking prevents repeated votes.
-
-8. **The `context` template variable name shadows Django terminology.** It's just a string for navbar highlighting, not a template context dict.
-
-9. **Mixed language in UI.** The moderation panel buttons are in Polish ("Zaakceptuj", "Odrzuc", "Usun") while the rest of the site is English.
-
-10. **`quote_view` always sets `context='accepted_list'`** regardless of how the user navigated there, so the "Accepted" nav tab is always highlighted on detail pages.
-
-11. **`best_list` uses `annotate(karma=F('votes_up') - F('votes_down'))`** to compute karma in the database. The `karma` attribute is available on queryset results but is not a model field.
-
-12. **No CSRF protection on vote endpoints.** Voting views use GET requests so CSRF middleware doesn't apply, but this also means any page can trigger votes via image tags or links.
-
-13. **The `SECRET_KEY` has a hardcoded fallback in settings.** This is fine for local dev but must be overridden via environment variable in production.
+6. **`quote_ajax` returns JSON error responses** (400 for missing `quote_id`, 404 for non-existent quote) — the frontend JS does not currently display these errors to the user.
 
 ## Testing
 
@@ -144,7 +137,7 @@ Tests are in `quotes/tests.py` (17 tests, 4 classes):
 - `QuoteAddViewTest` — form submission and display
 - `QuoteDetailViewTest` — single quote view and 404
 
-Tests use Django's `TestCase` with the default test SQLite database. No fixtures — all data is created in `setUp` or individual tests.
+Tests use Django's `TestCase` with the default test SQLite database. No fixtures — all data is created in `setUp` or individual tests. State-changing tests use `self.client.post()` matching the `@require_POST` enforcement on views.
 
 Run with: `SECRET_KEY=test DEBUG=True python manage.py test`
 

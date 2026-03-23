@@ -1,33 +1,17 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="en">
 	<head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 		<title>{{ site_name }}</title>
 
     <!-- "Fork me on GitHub" ribbon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.2.0/gh-fork-ribbon.min.css" />
-    <!--[if lt IE 9]>
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.2.0/gh-fork-ribbon.ie.min.css" />
-    <![endif]-->
 
-    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
-      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-    <![endif]-->
-    <!-- Latest compiled and minified CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-
-    <!-- Optional theme -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
-
-    <!-- Latest compiled and minified JavaScript -->
-    <script type="text/javascript" src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 
     <!-- Add some favicons -->
     <link rel="apple-touch-icon" sizes="180x180" href="{% static 'apple-touch-icon.png' %}">
@@ -43,56 +27,52 @@
     {% block head %}{% endblock %}
 	</head>
 	<body>
-    <nav class="navbar navbar-inverse navbar-fixed-top">
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
       <div class="container">
-        <div class="navbar-header">
-          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand" href="{% url 'index_view' %}">
-            <span><img alt="bash.org.mny" src="{% static 'favicon-white-32x32.png' %}" height="20px" style="margin-right: 20px;"></img>{{ site_name }}</span>
-          </a>
-        </div>
-        <div class="navbar-collapse collapse">
-          <ul class="nav navbar-nav">
-            <li {% if context == 'index_view' %} class="active" {% endif %}>
-              <a href="{% url 'index_view' %}">
-                <span class="glyphicon glyphicon-home" aria-hidden="true"></span>&nbsp;Home
+        <a class="navbar-brand" href="{% url 'index_view' %}">
+          <img alt="bash.org.mny" src="{% static 'favicon-white-32x32.png' %}" height="20" class="me-2">{{ site_name }}
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
+          <span class="visually-hidden">Toggle navigation</span>
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarCollapse">
+          <ul class="navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link {% if context == 'index_view' %}active{% endif %}" href="{% url 'index_view' %}">
+                <i class="bi bi-house"></i>&nbsp;Home
               </a>
             </li>
-            <li {% if context == 'accepted_list' %} class="active" {% endif %}>
-              <a href="{% url 'accepted_list' %}">
-                <span class="glyphicon glyphicon-book" aria-hidden="true"></span>&nbsp;Accepted
+            <li class="nav-item">
+              <a class="nav-link {% if context == 'accepted_list' %}active{% endif %}" href="{% url 'accepted_list' %}">
+                <i class="bi bi-book"></i>&nbsp;Accepted
               </a>
             </li>
-            <li {% if context == 'best_list' %} class="active" {% endif %}>
-              <a href="{% url 'best_list' %}">
-                <span class="glyphicon glyphicon-heart" aria-hidden="true"></span>&nbsp;Best
+            <li class="nav-item">
+              <a class="nav-link {% if context == 'best_list' %}active{% endif %}" href="{% url 'best_list' %}">
+                <i class="bi bi-heart"></i>&nbsp;Best
               </a>
             </li>
-            <li {% if context == 'trash_list' %} class="active" {% endif %}>
-              <a href="{% url 'trash_list' %}">
-                <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>&nbsp;Rejected
+            <li class="nav-item">
+              <a class="nav-link {% if context == 'trash_list' %}active{% endif %}" href="{% url 'trash_list' %}">
+                <i class="bi bi-trash"></i>&nbsp;Rejected
               </a>
             </li>
-            <li {% if context == 'quote_add' %} class="active" {% endif %}>
-              <a href="{% url 'quote_add' %}">
-                <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span>&nbsp;Add quote
+            <li class="nav-item">
+              <a class="nav-link {% if context == 'quote_add' %}active{% endif %}" href="{% url 'quote_add' %}">
+                <i class="bi bi-pencil"></i>&nbsp;Add quote
               </a>
             </li>
-            <li {% if context == 'quote_manage' %} class="active" {% endif %}>
-              <a href="{% url 'login_user' %}">
-                <span class="glyphicon glyphicon-user" aria-hidden="true"></span>&nbsp;Moderation panel
+            <li class="nav-item">
+              <a class="nav-link {% if context == 'quote_manage' %}active{% endif %}" href="{% url 'login_user' %}">
+                <i class="bi bi-person"></i>&nbsp;Moderation panel
               </a>
             </li>
           </ul>
-        </div><!--/.nav-collapse -->
+        </div>
       </div>
     </nav>
-  <div class="container" style="padding-top: 51px;">
+  <div class="container" style="padding-top: 70px;">
 	{% block content %}
 	{% endblock %}
   </div>

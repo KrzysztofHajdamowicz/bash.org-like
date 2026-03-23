@@ -6,31 +6,34 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('quotes', '0001_initial'),
+        ("quotes", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='quote',
-            name='acceptant',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL),
+            model_name="quote",
+            name="acceptant",
+            field=models.ForeignKey(
+                blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL
+            ),
         ),
         migrations.AlterField(
-            model_name='quote',
-            name='created_date',
+            model_name="quote",
+            name="created_date",
             field=models.DateTimeField(auto_now_add=True),
         ),
         migrations.AlterField(
-            model_name='quote',
-            name='id',
-            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
+            model_name="quote",
+            name="id",
+            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
-            model_name='quote',
-            name='status',
-            field=models.PositiveIntegerField(choices=[(1, 'Is pending'), (2, 'Is rejected'), (3, 'is approved')], default=1),
+            model_name="quote",
+            name="status",
+            field=models.PositiveIntegerField(
+                choices=[(1, "Is pending"), (2, "Is rejected"), (3, "is approved")], default=1
+            ),
         ),
     ]

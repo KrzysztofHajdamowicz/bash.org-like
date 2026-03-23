@@ -4,14 +4,13 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('quotes', '0002_alter_quote_acceptant_alter_quote_created_date_and_more'),
+        ("quotes", "0002_alter_quote_acceptant_alter_quote_created_date_and_more"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='quote',
-            options={'ordering': ['-created_date']},
+            name="quote",
+            options={"ordering": ["-created_date"]},
         ),
     ]

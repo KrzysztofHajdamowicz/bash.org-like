@@ -3,24 +3,25 @@
 
 {% block head %}
 <script type="text/javascript">
-function vote_up(quote_id){
-    var url = "{% url 'quote_ajax' %}";
-    $.ajax({
-        url: url,
-        type: "GET",
-        dataType: "json",
-        data: {"quote_id": quote_id},
-        success: function(data){
-            $("#current_votes_" + quote_id).html(data["current_votes"]);
-        }
-    });
-}
-
-$(document).ready(function(){
-    $(".vote_up").click(function(event){
-        event.preventDefault();
-        vote_up($(this).attr("id").replace("vote_up_",""));
-        return false;
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.vote_up').forEach(function(el) {
+        el.addEventListener('click', function(event) {
+            event.preventDefault();
+            var quoteId = this.id.replace('vote_up_', '');
+            var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            fetch("{% url 'quote_ajax' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': csrfToken
+                },
+                body: 'quote_id=' + encodeURIComponent(quoteId)
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                document.getElementById('current_votes_' + quoteId).textContent = data.current_votes;
+            });
+        });
     });
 });
 </script>
@@ -29,25 +30,28 @@ $(document).ready(function(){
 {% block content %}
   {% include 'quotes/paginator.html' %}
     {% for quote in quotes %}
-      <div class="panel panel-default">
-        <div class="panel-heading">
-          <h3 class="panel-title">
+      <div class="card mb-3">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
             <a href="{% url 'quote_view' quote_id=quote.pk %}">#{{ quote.id }}</a>
-            <span class="quote-votes">
+            <span class="quote-votes float-end">
                 Karma: <span id="current_votes_{{ quote.id }}">{{ quote.votes_up|sub:quote.votes_down }}</span> ||
-                    <a href="{% url 'quote_vote_down' quote_id=quote.pk %}">
-                      <span class="glyphicon glyphicon-thumbs-down" aria-hidden="true"></span>
-                    </a>&nbsp;&nbsp;&nbsp;
-                    <a href="#" id="vote_up_{{ quote.pk }}" class="vote_up">
-                      <span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"></span>
+                    <form method="post" action="{% url 'quote_vote_down' quote_id=quote.pk %}" style="display:inline;">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-link p-0 text-decoration-none">
+                        <i class="bi bi-hand-thumbs-down"></i>
+                      </button>
+                    </form>&nbsp;&nbsp;&nbsp;
+                    <a href="#" id="vote_up_{{ quote.pk }}" class="vote_up text-decoration-none">
+                      <i class="bi bi-hand-thumbs-up"></i>
                     </a>
             </span>
-          </h3>
+          </h5>
         </div>
       </div>
-      <div class="panel-body">
+      <div class="card-body">
         <pre>{{ quote.content|linebreaksbr }}</pre>
-        <p class="muted" style="margin-bottom: 50px;"><small><em>Date added: {{ quote.created_date }}</em></small></p>
+        <p class="text-muted" style="margin-bottom: 50px;"><small><em>Date added: {{ quote.created_date }}</em></small></p>
       </div>
     {% endfor %}
   {% include 'quotes/paginator.html' %}
