@@ -1,0 +1,76 @@
+x-web: &web-base
+  build: .
+  ports:
+    - "8000:8000"
+  environment: &web-env
+    SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
+    DEBUG: ${DEBUG:-false}
+    ALLOWED_HOSTS: ${ALLOWED_HOSTS:-*}
+
+services:
+  # SQLite profile (default)
+  web:
+    <<: *web-base
+    volumes:
+      - ./data:/app/data
+    environment:
+      <<: *web-env
+      DATABASE_URL: sqlite:////app/data/db.sqlite3
+    profiles: ["sqlite"]
+
+  # PostgreSQL profile
+  web-postgres:
+    <<: *web-base
+    environment:
+      <<: *web-env
+      DATABASE_URL: postgres://bash:bash@db-postgres:5432/bashorg
+    depends_on:
+      db-postgres:
+        condition: service_healthy
+    profiles: ["postgres"]
+
+  db-postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: bash
+      POSTGRES_PASSWORD: bash
+      POSTGRES_DB: bashorg
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bash -d bashorg"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    profiles: ["postgres"]
+
+  # MariaDB profile
+  web-mariadb:
+    <<: *web-base
+    environment:
+      <<: *web-env
+      DATABASE_URL: mysql://bash:bash@db-mariadb:3306/bashorg
+    depends_on:
+      db-mariadb:
+        condition: service_healthy
+    profiles: ["mariadb"]
+
+  db-mariadb:
+    image: mariadb:11
+    environment:
+      MARIADB_USER: bash
+      MARIADB_PASSWORD: bash
+      MARIADB_DATABASE: bashorg
+      MARIADB_ROOT_PASSWORD: rootpass
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    profiles: ["mariadb"]
+
+volumes:
+  postgres_data:
+  mariadb_data:

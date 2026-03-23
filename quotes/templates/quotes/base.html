@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="pl">
 	<head>
@@ -29,15 +30,15 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 
     <!-- Add some favicons -->
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
-    <link rel="icon" type="image/png" href="/icons/favicon-32x32.png" sizes="32x32">
-    <link rel="icon" type="image/png" href="/icons/favicon-16x16.png" sizes="16x16">
-    <link rel="manifest" href="/icons/manifest.json">
-    <link rel="mask-icon" href="/icons/safari-pinned-tab.svg" color="#5bbad5">
-    <link rel="shortcut icon" href="/icons/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'apple-touch-icon.png' %}">
+    <link rel="icon" type="image/png" href="{% static 'favicon-32x32.png' %}" sizes="32x32">
+    <link rel="icon" type="image/png" href="{% static 'favicon-16x16.png' %}" sizes="16x16">
+    <link rel="manifest" href="{% static 'manifest.json' %}">
+    <link rel="mask-icon" href="{% static 'safari-pinned-tab.svg' %}" color="#5bbad5">
+    <link rel="shortcut icon" href="{% static 'favicon.ico' %}">
     <meta name="apple-mobile-web-app-title" content="Bash.org.mny">
     <meta name="application-name" content="Bash.org.mny">
-    <meta name="msapplication-config" content="/icons/browserconfig.xml">
+    <meta name="msapplication-config" content="{% static 'browserconfig.xml' %}">
     <meta name="theme-color" content="#ffffff">
     {% block head %}{% endblock %}
 	</head>
@@ -52,7 +53,7 @@
             <span class="icon-bar"></span>
           </button>
           <a class="navbar-brand" href="{% url 'index_view' %}">
-            <span><img alt="bash.org.mny" src="/icons/favicon-white-32x32.png" height="20px" style="margin-right: 20px;"></img>{{ site_name }}</span>
+            <span><img alt="bash.org.mny" src="{% static 'favicon-white-32x32.png' %}" height="20px" style="margin-right: 20px;"></img>{{ site_name }}</span>
           </a>
         </div>
         <div class="navbar-collapse collapse">
