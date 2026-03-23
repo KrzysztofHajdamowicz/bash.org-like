@@ -1,7 +1,7 @@
 {% extends "quotes/base.html" %}
 {% block content %}
 
-      <form class="form-signin" name="LoginForm" action="/login/" method="post">
+      <form class="form-signin" name="LoginForm" action="{% url 'login_user' %}" method="post">
         {% csrf_token %}
         {% if next %}
             <input type="hidden" name="next" value="{{ next }}" />

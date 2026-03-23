@@ -1,23 +1,19 @@
+from django.conf import settings
 from django.db import models
 
 
 class Quote(models.Model):
-    STATUS_PENDING = 1
-    STATUS_REJECTED = 2
-    STATUS_APPROVED = 3
+    class Status(models.IntegerChoices):
+        PENDING = 1, "Is pending"
+        REJECTED = 2, "Is rejected"
+        APPROVED = 3, "Is approved"
 
-    STATUS_CHOICES = (
-        (STATUS_PENDING, "Is pending"),
-        (STATUS_REJECTED, "Is rejected"),
-        (STATUS_APPROVED, "Is approved"),
-    )
-
-    acceptant = models.ForeignKey("auth.User", null=True, blank=True, on_delete=models.SET_NULL)
-    content = models.TextField(null=False)
+    acceptant = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+    content = models.TextField()
     created_date = models.DateTimeField(auto_now_add=True)
     votes_up = models.PositiveIntegerField(default=0)
     votes_down = models.PositiveIntegerField(default=0)
-    status = models.PositiveIntegerField(default=STATUS_PENDING, choices=STATUS_CHOICES)
+    status = models.IntegerField(default=Status.PENDING, choices=Status.choices)
 
     class Meta:
         ordering = ["-created_date"]

@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from django.test import TestCase, Client
+from django.test import TestCase
 from django.urls import reverse
 
 from .models import Quote
@@ -8,7 +8,7 @@ from .models import Quote
 class QuoteModelTest(TestCase):
     def test_default_status_is_pending(self):
         quote = Quote.objects.create(content="<user1> hello\n<user2> world")
-        self.assertEqual(quote.status, Quote.STATUS_PENDING)
+        self.assertEqual(quote.status, Quote.Status.PENDING)
         self.assertEqual(quote.votes_up, 0)
         self.assertEqual(quote.votes_down, 0)
 
@@ -22,8 +22,6 @@ class QuoteWorkflowTest(TestCase):
 
     def setUp(self):
         self.admin = User.objects.create_user(username="admin", password="testpass123")
-        self.client = Client()
-
         self.quotes = []
         for i in range(5):
             q = Quote.objects.create(content=f"<user> quote number {i}")
@@ -37,7 +35,7 @@ class QuoteWorkflowTest(TestCase):
         self.assertEqual(response.status_code, 302)
 
         quote.refresh_from_db()
-        self.assertEqual(quote.status, Quote.STATUS_APPROVED)
+        self.assertEqual(quote.status, Quote.Status.APPROVED)
         self.assertEqual(quote.acceptant, self.admin)
 
     def test_reject_quote(self):
@@ -48,12 +46,12 @@ class QuoteWorkflowTest(TestCase):
         self.assertEqual(response.status_code, 302)
 
         quote.refresh_from_db()
-        self.assertEqual(quote.status, Quote.STATUS_REJECTED)
+        self.assertEqual(quote.status, Quote.Status.REJECTED)
         self.assertEqual(quote.acceptant, self.admin)
 
     def test_upvote_approved_quote(self):
         quote = self.quotes[0]
-        quote.status = Quote.STATUS_APPROVED
+        quote.status = Quote.Status.APPROVED
         quote.save()
 
         for _ in range(3):
@@ -65,7 +63,7 @@ class QuoteWorkflowTest(TestCase):
 
     def test_downvote_approved_quote(self):
         quote = self.quotes[0]
-        quote.status = Quote.STATUS_APPROVED
+        quote.status = Quote.Status.APPROVED
         quote.save()
 
         for _ in range(2):
@@ -77,7 +75,7 @@ class QuoteWorkflowTest(TestCase):
 
     def test_approved_quotes_appear_in_list(self):
         for q in self.quotes[:3]:
-            q.status = Quote.STATUS_APPROVED
+            q.status = Quote.Status.APPROVED
             q.save()
 
         response = self.client.get(reverse("accepted_list"))
@@ -86,7 +84,7 @@ class QuoteWorkflowTest(TestCase):
 
     def test_rejected_quotes_appear_in_trash(self):
         for q in self.quotes[3:]:
-            q.status = Quote.STATUS_REJECTED
+            q.status = Quote.Status.REJECTED
             q.save()
 
         response = self.client.get(reverse("trash_list"))
@@ -100,7 +98,7 @@ class QuoteWorkflowTest(TestCase):
 
     def test_best_list_ordered_by_karma(self):
         for i, q in enumerate(self.quotes[:3]):
-            q.status = Quote.STATUS_APPROVED
+            q.status = Quote.Status.APPROVED
             q.votes_up = (i + 1) * 10
             q.votes_down = 0
             q.save()
@@ -135,7 +133,7 @@ class QuoteAddViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(Quote.objects.filter(content="<me> new quote").exists())
         quote = Quote.objects.get(content="<me> new quote")
-        self.assertEqual(quote.status, Quote.STATUS_PENDING)
+        self.assertEqual(quote.status, Quote.Status.PENDING)
 
     def test_add_quote_get_shows_form(self):
         response = self.client.get(reverse("quote_add"))
@@ -145,7 +143,7 @@ class QuoteAddViewTest(TestCase):
 
 class QuoteDetailViewTest(TestCase):
     def test_view_single_quote(self):
-        quote = Quote.objects.create(content="<a> test quote", status=Quote.STATUS_APPROVED)
+        quote = Quote.objects.create(content="<a> test quote", status=Quote.Status.APPROVED)
         response = self.client.get(reverse("quote_view", args=[quote.id]))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context["quote"], quote)

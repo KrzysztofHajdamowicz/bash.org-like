@@ -65,22 +65,24 @@ icons/                   # Favicons and PWA manifest (served as static files)
 
 ### The Quote model
 
-The only model. Status uses class-level constants:
+The only model. Status uses a `models.IntegerChoices` enum:
 
-| Constant               | Value | Meaning  |
-|------------------------|-------|----------|
-| `Quote.STATUS_PENDING` | 1     | Pending  |
-| `Quote.STATUS_REJECTED`| 2     | Rejected |
-| `Quote.STATUS_APPROVED`| 3     | Approved |
+```python
+class Quote(models.Model):
+    class Status(models.IntegerChoices):
+        PENDING = 1, "Is pending"
+        REJECTED = 2, "Is rejected"
+        APPROVED = 3, "Is approved"
+```
 
-Always use these constants (e.g. `Quote.STATUS_APPROVED`) rather than bare integers when querying or setting status.
+Always use the enum (e.g. `Quote.Status.APPROVED`) rather than bare integers when querying or setting status.
 
 Key fields:
 - `content` — the quote text (TextField)
 - `votes_up` / `votes_down` — separate counters (PositiveIntegerField), not a net score
-- `acceptant` — ForeignKey to User (SET_NULL), the moderator who approved/rejected
+- `acceptant` — ForeignKey to `settings.AUTH_USER_MODEL` (SET_NULL), the moderator who approved/rejected
 - `created_date` — auto_now_add, used for default ordering
-- `status` — integer with choices, defaults to `STATUS_PENDING`
+- `status` — IntegerField with `Status.choices`, defaults to `Status.PENDING`
 
 `DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'` — the pk is a BigAutoField.
 
