@@ -1,19 +1,19 @@
-from django.conf.urls import url
+from django.urls import path
 from . import views
 
 urlpatterns = [
-    url(r'^$', views.index_view, name='index_view'),
-    url(r'^login/$', views.login_user, name='login_user'),
-    url(r'^manage/$', views.quote_manage, name='quote_manage'),
-    url(r'^quote/show$', views.accepted_list, name='accepted_list'),
-    url(r'^quote/best$', views.best_list, name='best_list'),
-    url(r'^trash/show$', views.trash_list, name='trash_list'),
-    url(r'^quote/(?P<quote_id>[0-9]+)/$', views.quote_view, name='quote_view'),
-    url(r'^quote/accept/(?P<quote_id>[0-9]+)/$', views.quote_accept, name='quote_accept'),
-    url(r'^quote/reject/(?P<quote_id>[0-9]+)/$', views.quote_reject, name='quote_reject'),
-    url(r'^quote/delete/(?P<quote_id>[0-9]+)/$', views.quote_delete, name='quote_delete'),
-    url(r'^quote/vote_up/(?P<quote_id>[0-9]+)/$', views.quote_vote_up, name='quote_vote_up'),
-    url(r'^quote/vote_down/(?P<quote_id>[0-9]+)/$', views.quote_vote_down, name='quote_vote_down'),
-    url(r'^quote/add$', views.quote_add, name='quote_add'),
-    url(r'^quote/ajax$', views.quote_ajax, name='quote_ajax'),
+    path('', views.index_view, name='index_view'),
+    path('login/', views.login_user, name='login_user'),
+    path('manage/', views.quote_manage, name='quote_manage'),
+    path('quote/show', views.accepted_list, name='accepted_list'),
+    path('quote/best', views.best_list, name='best_list'),
+    path('trash/show', views.trash_list, name='trash_list'),
+    path('quote/<int:quote_id>/', views.quote_view, name='quote_view'),
+    path('quote/accept/<int:quote_id>/', views.quote_accept, name='quote_accept'),
+    path('quote/reject/<int:quote_id>/', views.quote_reject, name='quote_reject'),
+    path('quote/delete/<int:quote_id>/', views.quote_delete, name='quote_delete'),
+    path('quote/vote_up/<int:quote_id>/', views.quote_vote_up, name='quote_vote_up'),
+    path('quote/vote_down/<int:quote_id>/', views.quote_vote_down, name='quote_vote_down'),
+    path('quote/add', views.quote_add, name='quote_add'),
+    path('quote/ajax', views.quote_ajax, name='quote_ajax'),
 ]

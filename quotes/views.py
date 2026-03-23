@@ -1,11 +1,10 @@
 # -*- coding: UTF-8 -*-
 import json
-from django.http import *
-from django.template import RequestContext
+from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.shortcuts import render, get_object_or_404, render_to_response, redirect
+from django.shortcuts import render, get_object_or_404, redirect
 from django.conf import settings
 from django.utils import timezone
 from .models import Quote
@@ -16,7 +15,7 @@ from .forms import AddQuoteForm
 
 
 def login_user(request):
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         return HttpResponseRedirect('/manage/')
     else:
         logout(request)
@@ -142,7 +141,7 @@ def quote_vote_down(request, quote_id):
 
 
 def quote_ajax(request):
-    if not request.is_ajax():
+    if request.headers.get('X-Requested-With') != 'XMLHttpRequest':
         pass  # You can handle with it
     quote = Quote.objects.get(pk=request.GET['quote_id'])
     quote.votes_up += 1

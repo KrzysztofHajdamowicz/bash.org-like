@@ -20,12 +20,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'mco$c8b8kdes5o4f$tdy9m1=&wx8(9tac%3dmcn5cfiuch3ahc'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'mco$c8b8kdes5o4f$tdy9m1=&wx8(9tac%3dmcn5cfiuch3ahc')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'False').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 
 
 # Application definition
@@ -120,4 +120,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 SITE_NAME = 'bash.org.mny'
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
