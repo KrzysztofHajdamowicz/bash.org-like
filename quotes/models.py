@@ -1,25 +1,22 @@
+from django.conf import settings
 from django.db import models
-from django.utils import timezone
-
-STATUS_CHOICES = (
-    (1, 'Is pending'),
-    (2, 'Is rejected'),
-    (3, 'is approved'),
-)
 
 
-# Create your models here.
 class Quote(models.Model):
-    acceptant = models.ForeignKey('auth.User', null=True)
-    content = models.TextField(null=False)
+    class Status(models.IntegerChoices):
+        PENDING = 1, "Is pending"
+        REJECTED = 2, "Is rejected"
+        APPROVED = 3, "Is approved"
+
+    acceptant = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+    content = models.TextField()
     created_date = models.DateTimeField(auto_now_add=True)
     votes_up = models.PositiveIntegerField(default=0)
     votes_down = models.PositiveIntegerField(default=0)
-    status = models.PositiveIntegerField(default=1, choices=STATUS_CHOICES)
+    status = models.IntegerField(default=Status.PENDING, choices=Status.choices)
 
-    def publish(self):
-        self.published_date = timezone.now()
-        self.save()
+    class Meta:
+        ordering = ["-created_date"]
 
     def __str__(self):
         return self.content

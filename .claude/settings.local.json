@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install:*)",
+      "Bash(pip3 install:*)",
+      "Bash(python3 -m venv .venv)",
+      "Bash(source .venv/bin/activate)",
+      "Bash(python manage.py check --deploy)",
+      "Bash(python manage.py makemigrations --check)",
+      "Bash(python manage.py makemigrations)",
+      "Bash(python manage.py check)",
+      "Bash(python -c \"import django; print\\(django.VERSION\\)\")",
+      "Bash(SECRET_KEY=test DEBUG=True python manage.py makemigrations)",
+      "Bash(SECRET_KEY=test DEBUG=True python manage.py migrate)",
+      "Bash(SECRET_KEY=test DEBUG=True python manage.py check --deploy)",
+      "Bash(SECRET_KEY=test DEBUG=True python manage.py makemigrations --check --dry-run)",
+      "Bash(SECRET_KEY=test DEBUG=True python manage.py test)",
+      "Bash(SECRET_KEY=test DEBUG=True python manage.py check)",
+      "Bash(ruff check:*)",
+      "Bash(ruff format:*)",
+      "Bash(SECRET_KEY=test python manage.py makemigrations)",
+      "Bash(SECRET_KEY=test python manage.py makemigrations --check --dry-run)"
+    ]
+  }
+}
