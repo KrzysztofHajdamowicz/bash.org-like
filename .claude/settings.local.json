@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install:*)",
+      "Bash(pip3 install:*)",
+      "Bash(python3 -m venv .venv)",
+      "Bash(source .venv/bin/activate)",
+      "Bash(python manage.py check --deploy)",
+      "Bash(python manage.py makemigrations --check)",
+      "Bash(python manage.py makemigrations)",
+      "Bash(python manage.py check)"
+    ]
+  }
+}
