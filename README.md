@@ -1,71 +1,89 @@
 # bash.org-like
 
-Simple script with bash.org functionality - perfect for making a quote database.
+A self-hosted [bash.org](http://bash.org)-style quote database built with **Django 6.0** and **Python 3.14**. Users submit IRC/chat quotes, moderators approve or reject them, and anyone can upvote or downvote.
 
-Script is written in Django as a my first project in this programming language.
-It's meant to be a bash.org "replacement" as I've been looking for similar tool about a year ago and I've found only legacy PHP 4.x stuff that barely runs at PHP 5.5/5.6 and required some code refactoring to actually run.
+## Quick start
 
-## Requirements
+### With Docker (recommended)
 
-- Python 3.11+
-- Django 4.2.x
+```bash
+# SQLite (simplest)
+docker compose --profile sqlite up --build
 
-## Getting started
+# PostgreSQL
+docker compose --profile postgres up --build
 
-### 1. Clone and create a virtual environment
+# MariaDB
+docker compose --profile mariadb up --build
+```
+
+The app will be available at `http://localhost:8000/`.
+
+### Local development
+
+Requires [uv](https://docs.astral.sh/uv/) and Python 3.14+.
 
 ```bash
 git clone https://github.com/KrzysztofHajdamowicz/bash.org-like.git
 cd bash.org-like
-python3 -m venv .venv
-source .venv/bin/activate
+uv sync
+SECRET_KEY=dev DEBUG=True uv run python manage.py migrate
+SECRET_KEY=dev DEBUG=True uv run python manage.py runserver
 ```
 
-### 2. Install dependencies
+Create a superuser for the moderation panel:
 
 ```bash
-pip install -r requirements.txt
+SECRET_KEY=dev DEBUG=True uv run python manage.py createsuperuser
 ```
 
-### 3. Run database migrations
+### Database drivers
+
+SQLite works out of the box. For other databases, install the optional extras:
 
 ```bash
-python manage.py migrate
+uv sync --extra postgres          # PostgreSQL
+uv sync --extra mysql             # MariaDB/MySQL
 ```
 
-### 4. Create a superuser (optional, for the admin panel and quote moderation)
+Set `DATABASE_URL` to point to your database (parsed by [dj-database-url](https://github.com/jazzband/dj-database-url)).
 
-```bash
-python manage.py createsuperuser
-```
-
-### 5. Start the development server
-
-```bash
-python manage.py runserver
-```
-
-The app will be available at `http://127.0.0.1:8000/`.
-
-## Production deployment
-
-### Environment variables
+## Environment variables
 
 | Variable | Description | Default |
 |---|---|---|
-| `SECRET_KEY` | Django secret key | hard-coded fallback (change in production!) |
+| `SECRET_KEY` | Django secret key | Hard-coded fallback (override in production!) |
 | `DEBUG` | Enable debug mode (`true`/`1`/`yes`) | `False` |
-| `ALLOWED_HOSTS` | Comma-separated list of allowed hosts | `*` |
+| `ALLOWED_HOSTS` | Comma-separated allowed hosts | `*` |
+| `DATABASE_URL` | Database connection URL | `sqlite:///db.sqlite3` |
 
-### Running with Gunicorn
+## Running tests
 
 ```bash
-export SECRET_KEY="your-production-secret-key"
-export DEBUG=false
-export ALLOWED_HOSTS="yourdomain.com,www.yourdomain.com"
-
-python manage.py collectstatic --noinput
-python manage.py migrate
-
-gunicorn BashOrgLike.wsgi:application --bind 0.0.0.0:8000
+SECRET_KEY=test DEBUG=True uv run --group dev pytest -v
 ```
+
+96 tests with coverage reporting (85% threshold enforced).
+
+## Linting
+
+```bash
+uv run --group dev ruff check . && uv run --group dev ruff format --check .
+```
+
+## Tech stack
+
+- **Django 6.0.3** with function-based views
+- **Bootstrap 5.3** frontend with vanilla JS for AJAX voting
+- **WhiteNoise** for static file serving
+- **Gunicorn** for production serving
+- **uv** for dependency management
+- **pytest** + **pytest-cov** for testing
+- **ruff** for linting and formatting
+
+## CI/CD
+
+- **GitHub Actions**: lint, test, Docker build on every push/PR
+- **CodeQL**: weekly security scanning
+- **Dependabot**: automated dependency updates for Python, Docker, and GitHub Actions
+- **GHCR publishing**: Docker images with SBOM generation and Sigstore attestations
