@@ -150,6 +150,26 @@ GitHub Actions (`.github/workflows/ci.yml`):
 2. **test** — pip install, `manage.py check`, `manage.py test`
 3. **docker** — builds the Docker image (runs after lint + test pass)
 
+### CodeQL security scanning
+
+GitHub Actions (`.github/workflows/codeql.yml`):
+- Runs GitHub's CodeQL static analysis on every push/PR to `master`
+- Also runs weekly (Monday 06:00 UTC) to catch newly disclosed vulnerabilities
+- Scans Python code for SQL injection, XSS, command injection, and other OWASP top-10 issues
+- Results appear in the repository's **Security → Code scanning alerts** tab
+
+### Dependabot
+
+Configured in `.github/dependabot.yml`. Checks for updates **weekly on Mondays** across three ecosystems:
+
+| Ecosystem | What it monitors | Labels |
+|---|---|---|
+| `pip` | `requirements.txt` — Django, gunicorn, whitenoise, etc. | `dependencies`, `python` |
+| `docker` | `Dockerfile` — `python:3.12-slim` base image | `dependencies`, `docker` |
+| `github-actions` | Workflow action versions (`actions/checkout`, etc.) | `dependencies`, `ci` |
+
+Dependabot PRs trigger the full CI pipeline (lint + test + docker build) automatically. Up to 5 open pip PRs at a time.
+
 Main branch is `master`.
 
 ## Deployment
