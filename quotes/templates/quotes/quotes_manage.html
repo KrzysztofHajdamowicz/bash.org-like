@@ -3,25 +3,27 @@
 
 {% block content %}
 
-		{% for quote in quotes %}
-			<div class="quote">
-				<h1><a href="{% url 'quote_view' quote_id=quote.pk %}">#{{ quote.id }}</a></h1>
-				<p class="quote-votes">
-					<form method="post" action="{% url 'quote_accept' quote_id=quote.pk %}" style="display:inline;">
-						{% csrf_token %}
-						<button type="submit" class="btn btn-success btn-sm">Accept</button>
-					</form>
-					<form method="post" action="{% url 'quote_reject' quote_id=quote.pk %}" style="display:inline;">
-						{% csrf_token %}
-						<button type="submit" class="btn btn-warning btn-sm">Reject</button>
-					</form>
-					<form method="post" action="{% url 'quote_delete' quote_id=quote.pk %}" style="display:inline;">
-						{% csrf_token %}
-						<button type="submit" class="btn btn-danger btn-sm">Delete</button>
-					</form>
-				</p>
-				<p class="content"><pre>{{ quote.content|linebreaksbr }}</pre></p>
-				<p class="accepted-by">{{ quote.acceptant }} </p>
-			</div>
-		{% endfor %}
+  {% include 'quotes/paginator.html' %}
+    {% for quote in quotes %}
+      <div class="quote">
+        <h1><a href="{% url 'quote_view' quote_id=quote.pk %}">#{{ quote.id }}</a></h1>
+        <p class="quote-votes">
+          <form method="post" action="{% url 'quote_accept' quote_id=quote.pk %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success btn-sm">Accept</button>
+          </form>
+          <form method="post" action="{% url 'quote_reject' quote_id=quote.pk %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-warning btn-sm">Reject</button>
+          </form>
+          <form method="post" action="{% url 'quote_delete' quote_id=quote.pk %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+          </form>
+        </p>
+        <p class="content"><pre>{{ quote.content|linebreaksbr }}</pre></p>
+        <p class="accepted-by">{{ quote.acceptant }} </p>
+      </div>
+    {% endfor %}
+  {% include 'quotes/paginator.html' %}
 {% endblock content %}
