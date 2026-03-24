@@ -13,10 +13,11 @@ class Quote(models.Model):
     created_date = models.DateTimeField(auto_now_add=True)
     votes_up = models.PositiveIntegerField(default=0)
     votes_down = models.PositiveIntegerField(default=0)
-    status = models.IntegerField(default=Status.PENDING, choices=Status.choices)
+    status = models.IntegerField(default=Status.PENDING, choices=Status.choices, db_index=True)
 
     class Meta:
         ordering = ["-created_date"]
 
+    # TODO: Truncate __str__ to ~80 chars to keep admin/shell/logs readable
     def __str__(self):
         return self.content
