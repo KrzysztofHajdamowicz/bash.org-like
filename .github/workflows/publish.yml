@@ -58,16 +58,19 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - uses: docker/setup-qemu-action@v4
+
       - uses: docker/setup-buildx-action@v4
 
       # ── Build and push ──
-      # Builds the image AND pushes it to ghcr.io in one step.
-      # The `push: true` flag handles the push. BuildKit cache speeds up rebuilds.
+      # Builds a multi-arch manifest (amd64 + arm64) and pushes to ghcr.io.
+      # QEMU handles cross-compilation for the non-native platform.
       - name: Build and push Docker image
         id: build
         uses: docker/build-push-action@v7
         with:
           context: .
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

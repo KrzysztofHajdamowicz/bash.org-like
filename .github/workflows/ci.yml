@@ -54,11 +54,14 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - uses: docker/setup-qemu-action@v4
+
       - uses: docker/setup-buildx-action@v4
 
-      - name: Build Docker image
-        run: docker build -t bashorg-like:${{ github.sha }} .
-
-      - name: Tag as latest (master push only)
-        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-        run: docker tag bashorg-like:${{ github.sha }} bashorg-like:latest
+      - name: Build Docker image (multi-arch)
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: false
+          tags: bashorg-like:${{ github.sha }}
