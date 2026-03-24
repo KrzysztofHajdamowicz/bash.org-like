@@ -55,6 +55,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "BashOrgLike.context_processors.site_name",
             ],
         },
     },
@@ -97,4 +98,7 @@ STATICFILES_DIRS = [
     BASE_DIR / "icons",
 ]
 SITE_NAME = "bash.org.mny"
+
+# TODO: Configure security headers (SECURE_HSTS_SECONDS, SECURE_CONTENT_TYPE_NOSNIFF, etc.)
+# TODO: Add SRI integrity hashes to CDN links in base.html
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

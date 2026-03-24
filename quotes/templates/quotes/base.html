@@ -1,10 +1,10 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-	<head>
+  <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>{{ site_name }}</title>
+    <title>{{ site_name }}</title>
 
     <!-- "Fork me on GitHub" ribbon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.2.0/gh-fork-ribbon.min.css" />
@@ -25,8 +25,8 @@
     <meta name="msapplication-config" content="{% static 'browserconfig.xml' %}">
     <meta name="theme-color" content="#ffffff">
     {% block head %}{% endblock %}
-	</head>
-	<body>
+  </head>
+  <body>
     <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
       <div class="container">
         <a class="navbar-brand" href="{% url 'index_view' %}">
@@ -39,43 +39,52 @@
         <div class="collapse navbar-collapse" id="navbarCollapse">
           <ul class="navbar-nav">
             <li class="nav-item">
-              <a class="nav-link {% if context == 'index_view' %}active{% endif %}" href="{% url 'index_view' %}">
+              <a class="nav-link {% if active_nav == 'index_view' %}active{% endif %}" href="{% url 'index_view' %}">
                 <i class="bi bi-house"></i>&nbsp;Home
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link {% if context == 'accepted_list' %}active{% endif %}" href="{% url 'accepted_list' %}">
+              <a class="nav-link {% if active_nav == 'accepted_list' %}active{% endif %}" href="{% url 'accepted_list' %}">
                 <i class="bi bi-book"></i>&nbsp;Accepted
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link {% if context == 'best_list' %}active{% endif %}" href="{% url 'best_list' %}">
+              <a class="nav-link {% if active_nav == 'best_list' %}active{% endif %}" href="{% url 'best_list' %}">
                 <i class="bi bi-heart"></i>&nbsp;Best
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link {% if context == 'trash_list' %}active{% endif %}" href="{% url 'trash_list' %}">
+              <a class="nav-link {% if active_nav == 'trash_list' %}active{% endif %}" href="{% url 'trash_list' %}">
                 <i class="bi bi-trash"></i>&nbsp;Rejected
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link {% if context == 'quote_add' %}active{% endif %}" href="{% url 'quote_add' %}">
+              <a class="nav-link {% if active_nav == 'quote_add' %}active{% endif %}" href="{% url 'quote_add' %}">
                 <i class="bi bi-pencil"></i>&nbsp;Add quote
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link {% if context == 'quote_manage' %}active{% endif %}" href="{% url 'login_user' %}">
+              <a class="nav-link {% if active_nav == 'quote_manage' %}active{% endif %}" href="{% url 'login_user' %}">
                 <i class="bi bi-person"></i>&nbsp;Moderation panel
               </a>
             </li>
           </ul>
+          {% if user.is_authenticated %}
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'logout_user' %}">
+                <i class="bi bi-box-arrow-right"></i>&nbsp;Logout
+              </a>
+            </li>
+          </ul>
+          {% endif %}
         </div>
       </div>
     </nav>
-  <div class="container" style="padding-top: 70px;">
-	{% block content %}
-	{% endblock %}
-  </div>
-  <a class="github-fork-ribbon right-bottom fixed" href="https://github.com/KrzysztofHajdamowicz/bash.org-like" title="Fork me on GitHub">Fork me on GitHub</a>
-	</body>
+    <div class="container" style="padding-top: 70px;">
+      {% block content %}
+      {% endblock %}
+    </div>
+    <a class="github-fork-ribbon right-bottom fixed" href="https://github.com/KrzysztofHajdamowicz/bash.org-like" title="Fork me on GitHub">Fork me on GitHub</a>
+  </body>
 </html>
