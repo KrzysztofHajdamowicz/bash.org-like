@@ -263,6 +263,16 @@ class QuoteAddViewTest(TestCase):
         response = self.client.get(reverse("quote_add"))
         self.assertTemplateUsed(response, "quotes/quote_add.html")
 
+    def test_honeypot_rejects_bot_submission(self):
+        response = self.client.post(reverse("quote_add"), {"content": "<bot> spam", "website": "http://spam.com"})
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Quote.objects.exists())
+
+    def test_honeypot_allows_normal_submission(self):
+        response = self.client.post(reverse("quote_add"), {"content": "<me> legit quote", "website": ""})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(Quote.objects.filter(content="<me> legit quote").exists())
+
 
 class SafeRedirectTest(TestCase):
     def setUp(self):
@@ -400,6 +410,28 @@ class LoginViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
 
 
+class LogoutViewTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="admin", password="testpass123")
+
+    def test_logout_redirects_to_index(self):
+        self.client.login(username="admin", password="testpass123")
+        response = self.client.get(reverse("logout_user"))
+        self.assertRedirects(response, reverse("index_view"))
+
+    def test_logout_actually_logs_out(self):
+        self.client.login(username="admin", password="testpass123")
+        self.client.get(reverse("logout_user"))
+        response = self.client.get(reverse("quote_manage"))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/login/", response.url)
+
+    def test_logout_requires_login(self):
+        response = self.client.get(reverse("logout_user"))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/login/", response.url)
+
+
 class QuoteAjaxTest(TestCase):
     def setUp(self):
         self.quote = Quote.objects.create(content="<user> ajax test", status=Quote.Status.APPROVED)
@@ -471,10 +503,59 @@ class PaginationTest(TestCase):
         response = self.client.get(reverse("best_list"), {"page": 2})
         self.assertEqual(len(response.context["quotes"]), 10)
 
-    def test_trash_list_limited_to_10(self):
+    def test_trash_list_paginates(self):
         Quote.objects.update(status=Quote.Status.REJECTED)
         response = self.client.get(reverse("trash_list"))
         self.assertEqual(len(response.context["quotes"]), 10)
+
+    def test_trash_list_page_2(self):
+        Quote.objects.update(status=Quote.Status.REJECTED)
+        response = self.client.get(reverse("trash_list"), {"page": 2})
+        self.assertEqual(len(response.context["quotes"]), 10)
+
+    def test_manage_list_paginates(self):
+        Quote.objects.update(status=Quote.Status.PENDING)
+        User.objects.create_user(username="admin", password="testpass123")
+        self.client.login(username="admin", password="testpass123")
+        response = self.client.get(reverse("quote_manage"))
+        self.assertEqual(len(response.context["quotes"]), 10)
+
+    def test_manage_list_page_2(self):
+        Quote.objects.update(status=Quote.Status.PENDING)
+        User.objects.create_user(username="admin", password="testpass123")
+        self.client.login(username="admin", password="testpass123")
+        response = self.client.get(reverse("quote_manage"), {"page": 2})
+        self.assertEqual(len(response.context["quotes"]), 10)
+
+
+class ActiveNavTest(TestCase):
+    """Verify active_nav is set correctly for navbar highlighting."""
+
+    def test_index_active_nav(self):
+        response = self.client.get(reverse("index_view"))
+        self.assertEqual(response.context["active_nav"], "index_view")
+
+    def test_accepted_list_active_nav(self):
+        response = self.client.get(reverse("accepted_list"))
+        self.assertEqual(response.context["active_nav"], "accepted_list")
+
+    def test_best_list_active_nav(self):
+        response = self.client.get(reverse("best_list"))
+        self.assertEqual(response.context["active_nav"], "best_list")
+
+    def test_trash_list_active_nav(self):
+        response = self.client.get(reverse("trash_list"))
+        self.assertEqual(response.context["active_nav"], "trash_list")
+
+    def test_quote_add_active_nav(self):
+        response = self.client.get(reverse("quote_add"))
+        self.assertEqual(response.context["active_nav"], "quote_add")
+
+    def test_manage_active_nav(self):
+        User.objects.create_user(username="admin", password="testpass123")
+        self.client.login(username="admin", password="testpass123")
+        response = self.client.get(reverse("quote_manage"))
+        self.assertEqual(response.context["active_nav"], "quote_manage")
 
 
 class TemplateFilterTest(TestCase):
@@ -510,6 +591,7 @@ class URLResolutionTest(TestCase):
         url_names_no_args = [
             "index_view",
             "login_user",
+            "logout_user",
             "quote_manage",
             "accepted_list",
             "best_list",
@@ -538,7 +620,10 @@ class FormTest(TestCase):
         from .forms import AddQuoteForm
 
         form = AddQuoteForm()
-        self.assertEqual(list(form.fields.keys()), ["content"])
+        # content is the only model field; website is the honeypot
+        self.assertIn("content", form.fields)
+        self.assertIn("website", form.fields)
+        self.assertEqual(len(form.fields), 2)
 
     def test_form_rejects_missing_content(self):
         from .forms import AddQuoteForm
@@ -553,3 +638,16 @@ class FormTest(TestCase):
         self.assertTrue(form.is_valid())
         quote = form.save()
         self.assertEqual(quote.status, Quote.Status.PENDING)
+
+    def test_honeypot_field_is_hidden(self):
+        from .forms import AddQuoteForm
+
+        form = AddQuoteForm()
+        self.assertEqual(form.fields["website"].widget.__class__.__name__, "HiddenInput")
+
+    def test_honeypot_filled_rejects_form(self):
+        from .forms import AddQuoteForm
+
+        form = AddQuoteForm(data={"content": "test", "website": "http://spam.com"})
+        self.assertFalse(form.is_valid())
+        self.assertIn("website", form.errors)
