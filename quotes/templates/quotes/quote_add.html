@@ -5,6 +5,7 @@
   <fieldset style="margin-top: 50px;">
     <legend>Add a new quote</legend>
     {% csrf_token %}
+    {{ form.website }}
     <label class="form-label" for="id_content">Quote content</label>
     <textarea style="margin-bottom: 20px;" class="form-control" id="id_content" name="content" placeholder="Quote content" required autofocus></textarea>
     <button class="btn btn-lg btn-primary w-100" type="submit">Add a quote!</button>
