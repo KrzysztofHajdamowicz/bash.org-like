@@ -26,7 +26,9 @@
       "Bash(uv run:*)",
       "WebFetch(domain:docs.astral.sh)",
       "WebFetch(domain:docs.github.com)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(SECRET_KEY=test uv run python manage.py makemigrations)",
+      "Bash(SECRET_KEY=test DEBUG=True uv run --group dev pytest -v)"
     ]
   }
 }
