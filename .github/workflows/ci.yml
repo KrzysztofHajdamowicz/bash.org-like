@@ -12,17 +12,13 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
-      - run: pip install ruff
+      - uses: astral-sh/setup-uv@v7
 
       - name: Lint
-        run: ruff check .
+        run: uv run --group dev ruff check .
 
       - name: Check formatting
-        run: ruff format --check .
+        run: uv run --group dev ruff format --check .
 
   test:
     runs-on: ubuntu-latest
@@ -32,17 +28,16 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v7
 
-      - run: pip install -r requirements.txt
+      - name: Install dependencies
+        run: uv sync --frozen
 
       - name: Django system check
-        run: python manage.py check
+        run: uv run python manage.py check
 
       - name: Run tests
-        run: python manage.py test
+        run: uv run python manage.py test
 
   docker:
     runs-on: ubuntu-latest

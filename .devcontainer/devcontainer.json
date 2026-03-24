@@ -11,17 +11,15 @@
     "vscode": {
       "extensions": [
         "ms-python.python",
-        "ms-python.pylint",
-        "ms-python.black-formatter",
+        "charliermarsh.ruff",
         "batisteo.vscode-django",
         "ms-azuretools.vscode-docker"
       ],
       "settings": {
         "[python]": {
-          "editor.defaultFormatter": "ms-python.black-formatter",
+          "editor.defaultFormatter": "charliermarsh.ruff",
           "editor.formatOnSave": true
-        },
-        "black-formatter.args": ["--line-length", "119"]
+        }
       }
     }
   }

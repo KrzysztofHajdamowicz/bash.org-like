@@ -19,7 +19,11 @@
       "Bash(ruff check:*)",
       "Bash(ruff format:*)",
       "Bash(SECRET_KEY=test python manage.py makemigrations)",
-      "Bash(SECRET_KEY=test python manage.py makemigrations --check --dry-run)"
+      "Bash(SECRET_KEY=test python manage.py makemigrations --check --dry-run)",
+      "Bash(uv lock:*)",
+      "Bash(uv sync:*)",
+      "Bash(SECRET_KEY=test DEBUG=True uv run python manage.py test)",
+      "Bash(uv run:*)"
     ]
   }
 }

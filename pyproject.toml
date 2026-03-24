@@ -1,0 +1,27 @@
+[project]
+name = "bash-org-like"
+version = "1.0.0"
+description = "A bash.org-like quote database built with Django"
+requires-python = ">=3.14"
+dependencies = [
+    "django==6.0.3",
+    "gunicorn==25.1.0",
+    "whitenoise==6.12.0",
+    "dj-database-url==3.1.2",
+]
+
+[project.optional-dependencies]
+postgres = ["psycopg[binary]==3.3.3"]
+mysql = ["mysqlclient==2.2.8"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.11.0",
+]
+
+[tool.ruff]
+line-length = 119
+target-version = "py312"
+
+[tool.ruff.lint.per-file-ignores]
+"**/migrations/*.py" = ["E501"]

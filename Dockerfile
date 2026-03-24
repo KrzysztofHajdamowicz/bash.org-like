@@ -1,14 +1,16 @@
 # -- Builder stage --
 FROM python:3.14-slim AS builder
 
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
 WORKDIR /app
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends gcc pkg-config libmariadb-dev libpq-dev && \
     rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project --extra postgres --extra mysql
 
 # -- Final stage --
 FROM python:3.14-slim
@@ -19,7 +21,8 @@ RUN apt-get update && \
 
 WORKDIR /app
 
-COPY --from=builder /install /usr/local
+COPY --from=builder /app/.venv /app/.venv
+ENV PATH="/app/.venv/bin:$PATH"
 
 COPY . .
 

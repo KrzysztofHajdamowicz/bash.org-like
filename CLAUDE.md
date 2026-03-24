@@ -13,17 +13,25 @@ A **bash.org-like quote database** built with Django. Users submit IRC/chat-styl
 ## Quick commands
 
 ```bash
+# Install dependencies (core only — SQLite works out of the box)
+uv sync
+
+# Install with database drivers
+uv sync --extra postgres          # PostgreSQL
+uv sync --extra mysql             # MariaDB/MySQL
+uv sync --extra postgres --extra mysql  # both
+
 # Run dev server (set env vars or use defaults)
-SECRET_KEY=dev DEBUG=True python manage.py runserver
+SECRET_KEY=dev DEBUG=True uv run python manage.py runserver
 
 # Run tests (17 tests)
-SECRET_KEY=test DEBUG=True python manage.py test
+SECRET_KEY=test DEBUG=True uv run python manage.py test
 
 # Lint
-ruff check . && ruff format --check .
+uv run --group dev ruff check . && uv run --group dev ruff format --check .
 
 # Generate migrations after model changes
-SECRET_KEY=test python manage.py makemigrations
+SECRET_KEY=test uv run python manage.py makemigrations
 
 # Docker (pick a profile: sqlite, postgres, mariadb)
 docker compose --profile sqlite up --build
@@ -59,9 +67,21 @@ quotes/                  # The single Django app
     paginator.html       # Reusable pagination partial
 
 icons/                   # Favicons and PWA manifest (served as static files)
+
+pyproject.toml           # Project metadata, dependencies, and ruff config (PEP 621)
+uv.lock                  # Reproducible lock file (committed to git)
 ```
 
 ## Architecture and design
+
+### Package management — uv
+
+This project uses **[uv](https://docs.astral.sh/uv/)** instead of pip:
+- **`pyproject.toml`** — single source of truth for dependencies (PEP 621 standard)
+- **`uv.lock`** — deterministic lock file with hashes, committed to git
+- **Optional extras** — database drivers are optional: `postgres` (psycopg3) and `mysql` (mysqlclient). Core deps (Django, gunicorn, whitenoise, dj-database-url) are always installed.
+- **Dev dependency group** — `ruff` is in `[dependency-groups] dev`, installed with `--group dev`
+- **No `requirements.txt`** — replaced by pyproject.toml + uv.lock
 
 ### The Quote model
 
@@ -141,14 +161,16 @@ Tests are in `quotes/tests.py` (17 tests, 4 classes):
 
 Tests use Django's `TestCase` with the default test SQLite database. No fixtures — all data is created in `setUp` or individual tests. State-changing tests use `self.client.post()` matching the `@require_POST` enforcement on views.
 
-Run with: `SECRET_KEY=test DEBUG=True python manage.py test`
+Run with: `SECRET_KEY=test DEBUG=True uv run python manage.py test`
 
 ## CI/CD
 
 GitHub Actions (`.github/workflows/ci.yml`):
-1. **lint** — ruff check + format check (Python 3.12)
-2. **test** — pip install, `manage.py check`, `manage.py test`
+1. **lint** — `uv run --group dev ruff check/format` (Python 3.12)
+2. **test** — `uv sync` + `manage.py check` + `manage.py test`
 3. **docker** — builds the Docker image (runs after lint + test pass)
+
+Uses `astral-sh/setup-uv@v6` for fast, cached uv installs in CI.
 
 ### CodeQL security scanning
 
@@ -164,8 +186,8 @@ Configured in `.github/dependabot.yml`. Checks for updates **weekly on Mondays**
 
 | Ecosystem | What it monitors | Labels |
 |---|---|---|
-| `pip` | `requirements.txt` — Django, gunicorn, whitenoise, etc. | `dependencies`, `python` |
-| `docker` | `Dockerfile` — `python:3.12-slim` base image | `dependencies`, `docker` |
+| `pip` | `pyproject.toml` — Django, gunicorn, whitenoise, etc. | `dependencies`, `python` |
+| `docker` | `Dockerfile` — `python:3.14-slim` base image | `dependencies`, `docker` |
 | `github-actions` | Workflow action versions (`actions/checkout`, etc.) | `dependencies`, `ci` |
 
 Dependabot PRs trigger the full CI pipeline (lint + test + docker build) automatically. Up to 5 open pip PRs at a time.
@@ -174,7 +196,7 @@ Main branch is `master`.
 
 ## Deployment
 
-- **Dockerfile**: multi-stage build, Python 3.12-slim, runs as non-root `app` user
+- **Dockerfile**: multi-stage build, Python 3.14-slim, uv for installs, runs as non-root `app` user
 - **docker-entrypoint.sh**: runs `migrate --noinput` then `exec "$@"`
 - **docker-compose.yml**: three profiles — `sqlite`, `postgres`, `mariadb`
 - **Gunicorn** serves the WSGI app on port 8000
