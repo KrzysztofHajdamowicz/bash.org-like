@@ -31,13 +31,21 @@ jobs:
       - uses: astral-sh/setup-uv@v7
 
       - name: Install dependencies
-        run: uv sync --frozen
+        run: uv sync --frozen --group dev
 
       - name: Django system check
         run: uv run python manage.py check
 
       - name: Run tests
-        run: uv run python manage.py test
+        run: uv run --group dev pytest --junitxml=test-results.xml -v
+
+      - name: Test report summary
+        uses: dorny/test-reporter@v3
+        if: always()
+        with:
+          name: Test Results
+          path: test-results.xml
+          reporter: java-junit
 
   docker:
     runs-on: ubuntu-latest

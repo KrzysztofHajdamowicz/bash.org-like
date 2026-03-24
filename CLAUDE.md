@@ -24,7 +24,10 @@ uv sync --extra postgres --extra mysql  # both
 # Run dev server (set env vars or use defaults)
 SECRET_KEY=dev DEBUG=True uv run python manage.py runserver
 
-# Run tests (17 tests)
+# Run tests (80 tests) — pytest with JUnit XML for CI reporting
+SECRET_KEY=test DEBUG=True uv run --group dev pytest -v
+
+# Or via Django's test runner (still works)
 SECRET_KEY=test DEBUG=True uv run python manage.py test
 
 # Lint
@@ -153,21 +156,32 @@ WhiteNoise serves static files. `STATIC_ROOT = BASE_DIR / 'staticfiles'`. The `i
 
 ## Testing
 
-Tests are in `quotes/tests.py` (17 tests, 4 classes):
-- `QuoteModelTest` — model defaults and `__str__`
-- `QuoteWorkflowTest` — full lifecycle (approve, reject, vote, delete, auth checks, list filtering, best ordering)
-- `QuoteAddViewTest` — form submission and display
-- `QuoteDetailViewTest` — single quote view and 404
+Tests are in `quotes/tests.py` (80 tests, 12 classes):
+- `QuoteModelTest` — model defaults, `__str__`, ordering, `SET_NULL` on user delete, status enum values
+- `QuoteWorkflowTest` — full lifecycle (approve, reject, vote, delete, auth checks on all protected views, 404s on nonexistent quotes, list filtering by status, best ordering with downvotes, manage view content)
+- `QuoteAddViewTest` — form submission, display, empty validation, correct templates
+- `SafeRedirectTest` — malicious/safe/missing referer handling on public and protected views
+- `QuoteDetailViewTest` — single quote view, 404, access to pending/rejected quotes
+- `RequirePostTest` — GET returns 405 on all 6 POST-only endpoints
+- `IndexViewTest` — home page rendering and template
+- `LoginViewTest` — valid/invalid/empty credentials, already-authenticated redirect
+- `QuoteAjaxTest` — JSON voting endpoint (success, 400, 404, karma calculation)
+- `PaginationTest` — page size, multi-page navigation, invalid/out-of-range page handling, trash limit
+- `TemplateFilterTest` — `sub` filter with normal, negative, zero, and invalid inputs
+- `URLResolutionTest` — all 14 named URLs reverse correctly
+- `FormTest` — field exposure, validation, status override prevention
 
 Tests use Django's `TestCase` with the default test SQLite database. No fixtures — all data is created in `setUp` or individual tests. State-changing tests use `self.client.post()` matching the `@require_POST` enforcement on views.
 
-Run with: `SECRET_KEY=test DEBUG=True uv run python manage.py test`
+Test runner is **pytest** with **pytest-django**. CI outputs JUnit XML for GitHub test reporting.
+
+Run with: `SECRET_KEY=test DEBUG=True uv run --group dev pytest -v`
 
 ## CI/CD
 
 GitHub Actions (`.github/workflows/ci.yml`):
 1. **lint** — `uv run --group dev ruff check/format` (Python 3.12)
-2. **test** — `uv sync --frozen` + `manage.py check` + `manage.py test`
+2. **test** — `uv sync --frozen --group dev` + `manage.py check` + `pytest --junitxml` with **dorny/test-reporter** for per-test pass/fail table on PRs
 3. **docker** — builds the Docker image (runs after lint + test pass)
 
 Uses `astral-sh/setup-uv@v7` for fast, cached uv installs in CI.
