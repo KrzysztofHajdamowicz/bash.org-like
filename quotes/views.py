@@ -6,9 +6,27 @@ from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 from django.conf import settings
+from django.utils.http import url_has_allowed_host_and_scheme
 
 from .forms import AddQuoteForm
 from .models import Quote
+
+
+def get_safe_redirect_url(request, fallback="/"):
+    """
+    Return a safe URL to redirect to, based on HTTP_REFERER.
+    Falls back to the given path if the referrer is not safe.
+    """
+    referrer = request.META.get("HTTP_REFERER")
+    if not referrer:
+        return fallback
+    if url_has_allowed_host_and_scheme(
+        referrer,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return referrer
+    return fallback
 
 
 def login_user(request):
@@ -117,7 +135,7 @@ def quote_accept(request, quote_id):
     quote.status = Quote.Status.APPROVED
     quote.acceptant = request.user
     quote.save()
-    return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
+    return HttpResponseRedirect(get_safe_redirect_url(request))
 
 
 @login_required(login_url="/login/")
@@ -127,7 +145,7 @@ def quote_reject(request, quote_id):
     quote.status = Quote.Status.REJECTED
     quote.acceptant = request.user
     quote.save()
-    return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
+    return HttpResponseRedirect(get_safe_redirect_url(request))
 
 
 @login_required(login_url="/login/")
@@ -135,7 +153,7 @@ def quote_reject(request, quote_id):
 def quote_delete(request, quote_id):
     quote = get_object_or_404(Quote, pk=quote_id)
     quote.delete()
-    return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
+    return HttpResponseRedirect(get_safe_redirect_url(request))
 
 
 @require_POST
@@ -143,7 +161,7 @@ def quote_vote_up(request, quote_id):
     quote = get_object_or_404(Quote, pk=quote_id)
     quote.votes_up += 1
     quote.save()
-    return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
+    return HttpResponseRedirect(get_safe_redirect_url(request))
 
 
 @require_POST
@@ -151,7 +169,7 @@ def quote_vote_down(request, quote_id):
     quote = get_object_or_404(Quote, pk=quote_id)
     quote.votes_down += 1
     quote.save()
-    return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
+    return HttpResponseRedirect(get_safe_redirect_url(request))
 
 
 @require_POST
