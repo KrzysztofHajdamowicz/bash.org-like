@@ -1,6 +1,6 @@
 {
   "name": "bash.org-like",
-  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "image": "mcr.microsoft.com/devcontainers/python:3.14",
   "forwardPorts": [8000],
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "containerEnv": {
