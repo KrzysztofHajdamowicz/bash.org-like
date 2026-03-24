@@ -15,6 +15,10 @@ RUN uv sync --frozen --no-dev --no-install-project --extra postgres --extra mysq
 # -- Final stage --
 FROM python:3.14-slim
 
+LABEL org.opencontainers.image.source="https://github.com/KrzysztofHajdamowicz/bash.org-like"
+LABEL org.opencontainers.image.description="A bash.org-like quote database built with Django"
+LABEL org.opencontainers.image.licenses="MIT"
+
 RUN apt-get update && \
     apt-get install -y --no-install-recommends libmariadb3 libpq5 && \
     rm -rf /var/lib/apt/lists/*

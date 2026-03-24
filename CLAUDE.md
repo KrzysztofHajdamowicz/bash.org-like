@@ -184,6 +184,8 @@ GitHub Actions (`.github/workflows/ci.yml`):
 2. **test** — `uv sync --frozen --group dev` + `manage.py check` + `pytest --junitxml` with **dorny/test-reporter** for per-test pass/fail table on PRs
 3. **docker** — builds the Docker image (runs after lint + test pass)
 
+CI is also callable via `workflow_call` so the publish workflow can reuse it as a prerequisite.
+
 Uses `astral-sh/setup-uv@v7` for fast, cached uv installs in CI.
 
 ### CodeQL security scanning
@@ -215,8 +217,41 @@ Dependabot natively supports `uv` — it updates both `pyproject.toml` and `uv.l
 
 Main branch is `master`.
 
+### Publishing to GHCR
+
+GitHub Actions (`.github/workflows/publish.yml`) — runs on pushes to `master` and version tags (`v*`), after CI passes:
+
+1. **Build & push** — builds the Docker image and pushes to `ghcr.io/krzysztofahajdamowicz/bash.org-like`
+2. **SBOM generation** — produces two CycloneDX JSON SBOMs via Syft (`anchore/sbom-action`):
+   - `sbom-docker.cyclonedx.json` — full Docker image scan (OS packages, Python runtime, app dependencies)
+   - `sbom-python.cyclonedx.json` — Python source dependencies only (from `pyproject.toml`/`uv.lock`)
+3. **Attestations** — signs with Sigstore via `actions/attest@v4`:
+   - Build provenance attestation (SLSA) attached to the container image
+   - Docker image SBOM attestation attached to the container image
+   - Python source SBOM attestation stored in GitHub
+4. **Artifact upload** — both SBOMs are uploaded as downloadable workflow artifacts
+
+Image tags produced by `docker/metadata-action`:
+
+| Trigger | Tags |
+|---|---|
+| Push to `master` | `:master`, `:sha-<short>` |
+| Tag `v1.2.3` | `:1.2.3`, `:1.2`, `:latest`, `:sha-<short>` |
+
+The image name is lowercased from `github.repository` at runtime because OCI references require lowercase.
+
+Permissions required: `packages: write`, `id-token: write` (Sigstore), `attestations: write`.
+
+The workflow reuses CI via `workflow_call` (CI's `on:` includes `workflow_call:` for this purpose).
+
+Verify attestations locally:
+```bash
+gh attestation verify oci://ghcr.io/krzysztofahajdamowicz/bash.org-like:latest --owner krzysztofahajdamowicz
+```
+
 ## Deployment
 
+- **Docker image**: published to `ghcr.io/krzysztofahajdamowicz/bash.org-like` (see [Publishing to GHCR](#publishing-to-ghcr))
 - **Dockerfile**: multi-stage build, Python 3.14-slim, uv for installs, runs as non-root `app` user
 - **docker-entrypoint.sh**: runs `migrate --noinput` then `exec "$@"`
 - **docker-compose.yml**: three profiles — `sqlite`, `postgres`, `mariadb`

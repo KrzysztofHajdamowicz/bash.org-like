@@ -25,7 +25,8 @@
       "Bash(SECRET_KEY=test DEBUG=True uv run python manage.py test)",
       "Bash(uv run:*)",
       "WebFetch(domain:docs.astral.sh)",
-      "WebFetch(domain:docs.github.com)"
+      "WebFetch(domain:docs.github.com)",
+      "WebFetch(domain:github.com)"
     ]
   }
 }
