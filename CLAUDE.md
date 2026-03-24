@@ -24,7 +24,7 @@ uv sync --extra postgres --extra mysql  # both
 # Run dev server (set env vars or use defaults)
 SECRET_KEY=dev DEBUG=True uv run python manage.py runserver
 
-# Run tests (80 tests) — pytest with JUnit XML for CI reporting
+# Run tests (96 tests) — pytest with coverage and JUnit XML for CI reporting
 SECRET_KEY=test DEBUG=True uv run --group dev pytest -v
 
 # Or via Django's test runner (still works)
@@ -45,15 +45,16 @@ docker compose --profile sqlite up --build
 ```
 BashOrgLike/             # Django project package
   settings.py            # All config — env-driven (SECRET_KEY, DEBUG, DATABASE_URL, ALLOWED_HOSTS)
+  context_processors.py  # Custom context processor (site_name)
   urls.py                # Root URL conf — admin + includes quotes.urls
   wsgi.py                # WSGI entry point for gunicorn
 
 quotes/                  # The single Django app
   models.py              # Quote model (the only model)
-  views.py               # 14 function-based views
-  urls.py                # 14 URL patterns, all using path()
-  forms.py               # AddQuoteForm (ModelForm, content field only)
-  tests.py               # 17 tests across 4 test classes
+  views.py               # 16 function-based views (including _paginate helper)
+  urls.py                # 15 URL patterns, all using path()
+  forms.py               # AddQuoteForm (ModelForm with honeypot field)
+  tests.py               # 96 tests across 15 test classes
   admin.py               # Quote registered in Django admin
   apps.py                # QuotesConfig
   templatetags/
@@ -83,7 +84,7 @@ This project uses **[uv](https://docs.astral.sh/uv/)** instead of pip:
 - **`pyproject.toml`** — single source of truth for dependencies (PEP 621 standard)
 - **`uv.lock`** — deterministic lock file with hashes, committed to git
 - **Optional extras** — database drivers are optional: `postgres` (psycopg3) and `mysql` (mysqlclient). Core deps (Django, gunicorn, whitenoise, dj-database-url) are always installed.
-- **Dev dependency group** — `ruff` is in `[dependency-groups] dev`, installed with `--group dev`
+- **Dev dependency group** — `ruff`, `pytest`, `pytest-django`, and `pytest-cov` are in `[dependency-groups] dev`, installed with `--group dev`
 - **No `requirements.txt`** — replaced by pyproject.toml + uv.lock
 
 ### The Quote model
@@ -105,7 +106,7 @@ Key fields:
 - `votes_up` / `votes_down` — separate counters (PositiveIntegerField), not a net score
 - `acceptant` — ForeignKey to `settings.AUTH_USER_MODEL` (SET_NULL), the moderator who approved/rejected
 - `created_date` — auto_now_add, used for default ordering
-- `status` — IntegerField with `Status.choices`, defaults to `Status.PENDING`
+- `status` — IntegerField with `Status.choices`, defaults to `Status.PENDING`, has `db_index=True`
 
 `DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'` — the pk is a BigAutoField.
 
@@ -113,11 +114,17 @@ Key fields:
 
 All views are plain functions. The codebase does **not** use class-based views.
 
-Every `render()` call passes `site_name` and `context` (a string identifying the active nav tab — not to be confused with template context). This `context` string drives the active state in the navbar via `{% if context == 'accepted_list' %}`.
+`site_name` is injected globally via a custom context processor (`BashOrgLike.context_processors.site_name`). Every `render()` call passes `active_nav` (a string identifying the active nav tab). This string drives the active state in the navbar via `{% if active_nav == 'accepted_list' %}`.
 
 Auth-protected views use `@login_required(login_url='/login/')`. There is no LoginRequiredMiddleware — most pages are public.
 
 **State-changing operations** (accept, reject, delete, vote) use `@require_POST` and POST forms with CSRF tokens. Templates use `<form method="post">` with `{% csrf_token %}` for these actions. The AJAX vote-up in `quotes_list.html` uses vanilla `fetch()` with the CSRF token read from a form on the page.
+
+**Voting uses atomic F() expressions** to prevent race conditions from concurrent requests. Accept/reject use `update_fields` to avoid clobbering concurrent vote changes.
+
+**Pagination** is handled by a shared `_paginate()` helper used by all list views (accepted, best, trash, manage). All lists paginate at 10 items per page.
+
+There is a **logout view** (`logout_user`) that requires authentication and redirects to the index page. The navbar shows a logout link when the user is authenticated.
 
 ### Template filter
 
@@ -142,38 +149,38 @@ WhiteNoise serves static files. `STATIC_ROOT = BASE_DIR / 'staticfiles'`. The `i
 
 ## Gotchas and things to watch out for
 
-1. **`login_user` view calls `logout()` on every non-authenticated request** before checking credentials. This is intentional but unusual.
+1. **Voting is not idempotent.** Each request atomically increments the counter via `F()` expressions. No session/IP tracking prevents repeated votes.
 
-2. **Voting is not idempotent.** Each request increments the counter. No session/IP tracking prevents repeated votes.
+2. **`best_list` uses `annotate(karma=F('votes_up') - F('votes_down'))`** to compute karma in the database. The `karma` attribute is available on queryset results but is not a model field.
 
-3. **The `context` template variable name shadows Django terminology.** It's just a string for navbar highlighting, not a template context dict.
+3. **The `SECRET_KEY` has a hardcoded fallback in settings.** This is fine for local dev but must be overridden via environment variable in production.
 
-4. **`best_list` uses `annotate(karma=F('votes_up') - F('votes_down'))`** to compute karma in the database. The `karma` attribute is available on queryset results but is not a model field.
+4. **`quote_ajax` returns JSON error responses** (400 for missing `quote_id`, 404 for non-existent quote) — the frontend JS does not currently display these errors to the user.
 
-5. **The `SECRET_KEY` has a hardcoded fallback in settings.** This is fine for local dev but must be overridden via environment variable in production.
-
-6. **`quote_ajax` returns JSON error responses** (400 for missing `quote_id`, 404 for non-existent quote) — the frontend JS does not currently display these errors to the user.
+5. **Quote submission has a honeypot field** (`website`) for basic bot protection. The field is hidden from real users but bots that fill all fields will be rejected.
 
 ## Testing
 
-Tests are in `quotes/tests.py` (80 tests, 12 classes):
+Tests are in `quotes/tests.py` (96 tests, 15 classes):
 - `QuoteModelTest` — model defaults, `__str__`, ordering, `SET_NULL` on user delete, status enum values
 - `QuoteWorkflowTest` — full lifecycle (approve, reject, vote, delete, auth checks on all protected views, 404s on nonexistent quotes, list filtering by status, best ordering with downvotes, manage view content)
-- `QuoteAddViewTest` — form submission, display, empty validation, correct templates
+- `QuoteAddViewTest` — form submission, display, empty validation, correct templates, honeypot bot rejection
 - `SafeRedirectTest` — malicious/safe/missing referer handling on public and protected views
 - `QuoteDetailViewTest` — single quote view, 404, access to pending/rejected quotes
 - `RequirePostTest` — GET returns 405 on all 6 POST-only endpoints
 - `IndexViewTest` — home page rendering and template
 - `LoginViewTest` — valid/invalid/empty credentials, already-authenticated redirect
+- `LogoutViewTest` — redirect after logout, session invalidation, login required
 - `QuoteAjaxTest` — JSON voting endpoint (success, 400, 404, karma calculation)
-- `PaginationTest` — page size, multi-page navigation, invalid/out-of-range page handling, trash limit
+- `PaginationTest` — page size, multi-page navigation, invalid/out-of-range page handling, trash and manage pagination
+- `ActiveNavTest` — verifies `active_nav` context variable on all public pages and manage view
 - `TemplateFilterTest` — `sub` filter with normal, negative, zero, and invalid inputs
-- `URLResolutionTest` — all 14 named URLs reverse correctly
-- `FormTest` — field exposure, validation, status override prevention
+- `URLResolutionTest` — all 15 named URLs reverse correctly
+- `FormTest` — field exposure, validation, status override prevention, honeypot field properties
 
 Tests use Django's `TestCase` with the default test SQLite database. No fixtures — all data is created in `setUp` or individual tests. State-changing tests use `self.client.post()` matching the `@require_POST` enforcement on views.
 
-Test runner is **pytest** with **pytest-django**. CI outputs JUnit XML for GitHub test reporting.
+Test runner is **pytest** with **pytest-django** and **pytest-cov**. Coverage threshold is 85% (currently at 99%). CI outputs JUnit XML for GitHub test reporting.
 
 Run with: `SECRET_KEY=test DEBUG=True uv run --group dev pytest -v`
 
