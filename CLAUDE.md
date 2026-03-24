@@ -167,10 +167,10 @@ Run with: `SECRET_KEY=test DEBUG=True uv run python manage.py test`
 
 GitHub Actions (`.github/workflows/ci.yml`):
 1. **lint** — `uv run --group dev ruff check/format` (Python 3.12)
-2. **test** — `uv sync` + `manage.py check` + `manage.py test`
+2. **test** — `uv sync --frozen` + `manage.py check` + `manage.py test`
 3. **docker** — builds the Docker image (runs after lint + test pass)
 
-Uses `astral-sh/setup-uv@v6` for fast, cached uv installs in CI.
+Uses `astral-sh/setup-uv@v7` for fast, cached uv installs in CI.
 
 ### CodeQL security scanning
 
@@ -186,11 +186,18 @@ Configured in `.github/dependabot.yml`. Checks for updates **weekly on Mondays**
 
 | Ecosystem | What it monitors | Labels |
 |---|---|---|
-| `pip` | `pyproject.toml` — Django, gunicorn, whitenoise, etc. | `dependencies`, `python` |
+| `uv` | `pyproject.toml` + `uv.lock` — Django, gunicorn, whitenoise, etc. | `dependencies`, `python` |
 | `docker` | `Dockerfile` — `python:3.14-slim` base image | `dependencies`, `docker` |
 | `github-actions` | Workflow action versions (`actions/checkout`, etc.) | `dependencies`, `ci` |
 
-Dependabot PRs trigger the full CI pipeline (lint + test + docker build) automatically. Up to 5 open pip PRs at a time.
+Dependabot PRs trigger the full CI pipeline (lint + test + docker build) automatically. Up to 5 open Python PRs at a time.
+
+**Dependency cooldown** is enabled for Python packages to avoid churn from rapid-fire releases:
+- Major updates: 14-day cooldown
+- Minor updates: 7-day cooldown
+- Patch updates: 3-day cooldown
+
+Dependabot natively supports `uv` — it updates both `pyproject.toml` and `uv.lock` in the same PR.
 
 Main branch is `master`.
 
