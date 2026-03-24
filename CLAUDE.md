@@ -189,9 +189,9 @@ Run with: `SECRET_KEY=test DEBUG=True uv run --group dev pytest -v`
 GitHub Actions (`.github/workflows/ci.yml`):
 1. **lint** — `uv run --group dev ruff check/format` (Python 3.12)
 2. **test** — `uv sync --frozen --group dev` + `manage.py check` + `pytest --junitxml` with **dorny/test-reporter** for per-test pass/fail table on PRs
-3. **docker** — builds the Docker image (runs after lint + test pass)
+3. **docker** — builds the Docker image (runs after lint + test pass), uses GHA cache (`scope=docker-build`)
 
-CI is also callable via `workflow_call` so the publish workflow can reuse it as a prerequisite.
+CI is also callable via `workflow_call` so the publish workflow can reuse it as a prerequisite. Both CI and publish share a GHA Docker layer cache (`scope=docker-build`) so publish gets near-instant cache hits after CI warms the cache.
 
 Uses `astral-sh/setup-uv@v7` for fast, cached uv installs in CI.
 
@@ -210,7 +210,7 @@ Configured in `.github/dependabot.yml`. Checks for updates **weekly on Mondays**
 | Ecosystem | What it monitors | Labels |
 |---|---|---|
 | `uv` | `pyproject.toml` + `uv.lock` — Django, gunicorn, whitenoise, etc. | `dependencies`, `python` |
-| `docker` | `Dockerfile` — `python:3.14-slim` base image | `dependencies`, `docker` |
+| `docker` | `Dockerfile` — `python:3.14-slim` base image, `ghcr.io/astral-sh/uv` | `dependencies`, `docker` |
 | `github-actions` | Workflow action versions (`actions/checkout`, etc.) | `dependencies`, `ci` |
 
 Dependabot PRs trigger the full CI pipeline (lint + test + docker build) automatically. Up to 5 open Python PRs at a time.
