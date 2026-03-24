@@ -30,10 +30,20 @@ def get_safe_redirect_url(request, fallback="/"):
     return fallback
 
 
+def _paginate(queryset, request, per_page=10):
+    paginator = Paginator(queryset, per_page)
+    page = request.GET.get("page")
+    try:
+        return paginator.page(page)
+    except PageNotAnInteger:
+        return paginator.page(1)
+    except EmptyPage:
+        return paginator.page(paginator.num_pages)
+
+
 def login_user(request):
     if request.user.is_authenticated:
         return redirect("quote_manage")
-    logout(request)
     if request.method == "POST":
         username = request.POST.get("username", "")
         password = request.POST.get("password", "")
@@ -41,30 +51,23 @@ def login_user(request):
         if user is not None:
             login(request, user)
             return redirect("quote_manage")
-    return render(request, "quotes/login_form.html", {"site_name": settings.SITE_NAME, "context": "login_user"})
+    return render(request, "quotes/login_form.html", {"active_nav": "login_user"})
+
+
+@login_required(login_url="/login/")
+def logout_user(request):
+    logout(request)
+    return redirect("index_view")
 
 
 def index_view(request):
-    return render(request, "quotes/welcome.html", {"site_name": settings.SITE_NAME, "context": "index_view"})
+    return render(request, "quotes/welcome.html", {"active_nav": "index_view"})
 
 
 def accepted_list(request):
     quotes = Quote.objects.filter(status=Quote.Status.APPROVED).order_by("-id")
-
-    paginator = Paginator(quotes, 10)
-    page = request.GET.get("page")
-    try:
-        quotes = paginator.page(page)
-    except PageNotAnInteger:
-        quotes = paginator.page(1)
-    except EmptyPage:
-        quotes = paginator.page(paginator.num_pages)
-
-    return render(
-        request,
-        "quotes/quotes_list.html",
-        {"quotes": quotes, "site_name": settings.SITE_NAME, "context": "accepted_list"},
-    )
+    quotes = _paginate(quotes, request)
+    return render(request, "quotes/quotes_list.html", {"quotes": quotes, "active_nav": "accepted_list"})
 
 
 def best_list(request):
@@ -73,35 +76,19 @@ def best_list(request):
         .annotate(karma=F("votes_up") - F("votes_down"))
         .order_by("-karma", "-id")
     )
-
-    paginator = Paginator(quotes, 10)
-    page = request.GET.get("page")
-    try:
-        quotes = paginator.page(page)
-    except PageNotAnInteger:
-        quotes = paginator.page(1)
-    except EmptyPage:
-        quotes = paginator.page(paginator.num_pages)
-
-    return render(
-        request, "quotes/quotes_list.html", {"quotes": quotes, "site_name": settings.SITE_NAME, "context": "best_list"}
-    )
+    quotes = _paginate(quotes, request)
+    return render(request, "quotes/quotes_list.html", {"quotes": quotes, "active_nav": "best_list"})
 
 
 def trash_list(request):
-    quotes = Quote.objects.filter(status=Quote.Status.REJECTED).order_by("-id")[:10]
-    return render(
-        request,
-        "quotes/quotes_list.html",
-        {"quotes": quotes, "site_name": settings.SITE_NAME, "context": "trash_list"},
-    )
+    quotes = Quote.objects.filter(status=Quote.Status.REJECTED).order_by("-id")
+    quotes = _paginate(quotes, request)
+    return render(request, "quotes/quotes_list.html", {"quotes": quotes, "active_nav": "trash_list"})
 
 
 def quote_view(request, quote_id):
     quote = get_object_or_404(Quote, pk=quote_id)
-    return render(
-        request, "quotes/quotes_view.html", {"quote": quote, "site_name": settings.SITE_NAME, "context": "quote_view"}
-    )
+    return render(request, "quotes/quotes_view.html", {"quote": quote, "active_nav": "quote_view"})
 
 
 def quote_add(request):
@@ -109,24 +96,17 @@ def quote_add(request):
         form = AddQuoteForm(request.POST)
         if form.is_valid():
             form.save()
-            return render(
-                request, "quotes/quote_added.html", {"site_name": settings.SITE_NAME, "context": "quote_add"}
-            )
+            return render(request, "quotes/quote_added.html", {"active_nav": "quote_add"})
     else:
         form = AddQuoteForm()
-    return render(
-        request, "quotes/quote_add.html", {"form": form, "site_name": settings.SITE_NAME, "context": "quote_add"}
-    )
+    return render(request, "quotes/quote_add.html", {"form": form, "active_nav": "quote_add"})
 
 
 @login_required(login_url="/login/")
 def quote_manage(request):
-    quotes = Quote.objects.filter(status=Quote.Status.PENDING).order_by("-id")[:10]
-    return render(
-        request,
-        "quotes/quotes_manage.html",
-        {"quotes": quotes, "site_name": settings.SITE_NAME, "context": "quote_manage"},
-    )
+    quotes = Quote.objects.filter(status=Quote.Status.PENDING).order_by("-id")
+    quotes = _paginate(quotes, request)
+    return render(request, "quotes/quotes_manage.html", {"quotes": quotes, "active_nav": "quote_manage"})
 
 
 @login_required(login_url="/login/")
@@ -135,7 +115,7 @@ def quote_accept(request, quote_id):
     quote = get_object_or_404(Quote, pk=quote_id)
     quote.status = Quote.Status.APPROVED
     quote.acceptant = request.user
-    quote.save()
+    quote.save(update_fields=["status", "acceptant"])
     return HttpResponseRedirect(get_safe_redirect_url(request))
 
 
@@ -145,7 +125,7 @@ def quote_reject(request, quote_id):
     quote = get_object_or_404(Quote, pk=quote_id)
     quote.status = Quote.Status.REJECTED
     quote.acceptant = request.user
-    quote.save()
+    quote.save(update_fields=["status", "acceptant"])
     return HttpResponseRedirect(get_safe_redirect_url(request))
 
 
@@ -159,17 +139,15 @@ def quote_delete(request, quote_id):
 
 @require_POST
 def quote_vote_up(request, quote_id):
-    quote = get_object_or_404(Quote, pk=quote_id)
-    quote.votes_up += 1
-    quote.save()
+    get_object_or_404(Quote, pk=quote_id)
+    Quote.objects.filter(pk=quote_id).update(votes_up=F("votes_up") + 1)
     return HttpResponseRedirect(get_safe_redirect_url(request))
 
 
 @require_POST
 def quote_vote_down(request, quote_id):
-    quote = get_object_or_404(Quote, pk=quote_id)
-    quote.votes_down += 1
-    quote.save()
+    get_object_or_404(Quote, pk=quote_id)
+    Quote.objects.filter(pk=quote_id).update(votes_down=F("votes_down") + 1)
     return HttpResponseRedirect(get_safe_redirect_url(request))
 
 
@@ -182,6 +160,6 @@ def quote_ajax(request):
         quote = Quote.objects.get(pk=quote_id)
     except Quote.DoesNotExist:
         return JsonResponse({"error": "Quote not found"}, status=404)
-    quote.votes_up += 1
-    quote.save()
+    Quote.objects.filter(pk=quote.pk).update(votes_up=F("votes_up") + 1)
+    quote.refresh_from_db()
     return JsonResponse({"current_votes": quote.votes_up - quote.votes_down})
