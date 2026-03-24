@@ -13,16 +13,17 @@ from .models import Quote
 
 
 def get_safe_redirect_url(request, fallback="/"):
-    """
-    Return a safe URL to redirect to, based on HTTP_REFERER.
-    Falls back to the given path if the referrer is not safe.
-    """
     referrer = request.META.get("HTTP_REFERER")
     if not referrer:
         return fallback
+    allowed_hosts = set(settings.ALLOWED_HOSTS)
+    if "*" in allowed_hosts:
+        # In dev mode ALLOWED_HOSTS=["*"], but url_has_allowed_host_and_scheme
+        # treats "*" as a literal hostname. Fall back to the request host.
+        allowed_hosts = {request.get_host()}
     if url_has_allowed_host_and_scheme(
         referrer,
-        allowed_hosts={request.get_host()},
+        allowed_hosts=allowed_hosts,
         require_https=request.is_secure(),
     ):
         return referrer

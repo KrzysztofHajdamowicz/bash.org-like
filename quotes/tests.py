@@ -141,6 +141,39 @@ class QuoteAddViewTest(TestCase):
         self.assertIn("form", response.context)
 
 
+class SafeRedirectTest(TestCase):
+    def setUp(self):
+        self.admin = User.objects.create_user(username="admin", password="testpass123")
+        self.quote = Quote.objects.create(content="<user> test", status=Quote.Status.APPROVED)
+
+    def test_malicious_referer_redirects_to_fallback(self):
+        response = self.client.post(
+            reverse("quote_vote_up", args=[self.quote.id]),
+            HTTP_REFERER="https://evil.com/steal-cookies",
+        )
+        self.assertRedirects(response, "/", fetch_redirect_response=False)
+
+    def test_safe_referer_is_preserved(self):
+        response = self.client.post(
+            reverse("quote_vote_up", args=[self.quote.id]),
+            HTTP_REFERER="http://testserver/quote/show",
+        )
+        self.assertRedirects(response, "http://testserver/quote/show", fetch_redirect_response=False)
+
+    def test_missing_referer_redirects_to_fallback(self):
+        response = self.client.post(reverse("quote_vote_up", args=[self.quote.id]))
+        self.assertRedirects(response, "/", fetch_redirect_response=False)
+
+    def test_malicious_referer_on_protected_view(self):
+        self.client.login(username="admin", password="testpass123")
+        quote = Quote.objects.create(content="<user> pending")
+        response = self.client.post(
+            reverse("quote_accept", args=[quote.id]),
+            HTTP_REFERER="https://evil.com/",
+        )
+        self.assertRedirects(response, "/", fetch_redirect_response=False)
+
+
 class QuoteDetailViewTest(TestCase):
     def test_view_single_quote(self):
         quote = Quote.objects.create(content="<a> test quote", status=Quote.Status.APPROVED)
