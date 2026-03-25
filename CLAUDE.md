@@ -237,6 +237,9 @@ GitHub Actions (`.github/workflows/publish.yml`) — runs on pushes to `master` 
    - Docker image SBOM attestation attached to the container image
    - Python source SBOM attestation stored in GitHub
 4. **Artifact upload** — both SBOMs are uploaded as downloadable workflow artifacts
+5. **GitHub Release** (tags only) — creates a draft release with:
+   - SBOMs attached as `SBOM-Docker-<version>.cyclonedx.json` and `SBOM-Python-<version>.cyclonedx.json`
+   - Release notes with changelog and `docker pull` instructions
 
 Image tags produced by `docker/metadata-action`:
 
@@ -247,7 +250,7 @@ Image tags produced by `docker/metadata-action`:
 
 The image name is lowercased from `github.repository` at runtime because OCI references require lowercase.
 
-Permissions required: `packages: write`, `id-token: write` (Sigstore), `attestations: write`.
+Permissions required: `packages: write`, `contents: write`, `id-token: write` (Sigstore), `attestations: write`.
 
 The workflow reuses CI via `workflow_call` (CI's `on:` includes `workflow_call:` for this purpose).
 
