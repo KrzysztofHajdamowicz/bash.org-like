@@ -133,7 +133,7 @@ jobs:
       # ── Upload SBOMs as workflow artifacts ──
       # Makes them downloadable from the Actions run summary page.
       - name: Upload SBOMs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sboms
           path: |
