@@ -12,6 +12,8 @@ updates:
       - dependencies
       - python
     open-pull-requests-limit: 5
+    assignees:
+      - KrzysztofHajdamowicz
     cooldown:
       default-days: 3
       semver-major-days: 14
@@ -28,6 +30,8 @@ updates:
     labels:
       - dependencies
       - docker
+    assignees:
+      - KrzysztofHajdamowicz
 
   - package-ecosystem: github-actions
     directory: /
@@ -39,3 +43,5 @@ updates:
     labels:
       - dependencies
       - ci
+    assignees:
+      - KrzysztofHajdamowicz
