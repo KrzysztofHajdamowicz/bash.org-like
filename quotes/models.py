@@ -16,7 +16,7 @@ class Quote(models.Model):
     status = models.IntegerField(default=Status.PENDING, choices=Status.choices, db_index=True)
 
     class Meta:
-        ordering = ["-created_date"]
+        ordering = ["-created_date"]  # noqa: RUF012 — Django Meta options are class-level by design
 
     # TODO: Truncate __str__ to ~80 chars to keep admin/shell/logs readable
     def __str__(self):

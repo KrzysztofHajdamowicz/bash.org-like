@@ -270,7 +270,9 @@ gh attestation verify oci://ghcr.io/krzysztofahajdamowicz/bash.org-like:latest -
 
 ## Code style
 
-- **Formatter**: ruff (line-length 119, target py312)
+- **Formatter**: ruff ≥0.16 (line-length 119, target py312) — 0.16 enables a much larger default rule set (413 rules)
 - **No type hints** in the codebase
 - **No docstrings** on views or models (except the `sub` template filter)
-- Migration files are excluded from E501 linting
+- Migration files are excluded from E501 and RUF012 linting (auto-generated Django code)
+- The `BashOrgLike/` project package is excluded from N999 (invalid module name) — renaming it would break settings/WSGI/Docker references
+- `Quote.Meta.ordering` carries an inline `noqa: RUF012` — Django Meta options are class-level lists by design
