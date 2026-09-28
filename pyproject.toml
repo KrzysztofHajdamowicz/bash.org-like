@@ -12,7 +12,7 @@ dependencies = [
 
 [project.optional-dependencies]
 postgres = ["psycopg[binary]==3.3.5"]
-mysql = ["mysqlclient==2.2.8"]
+mysql = ["mysqlclient==2.3.0"]
 
 [dependency-groups]
 dev = [
